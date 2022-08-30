@@ -35,10 +35,12 @@ function drawBitmapCenteredAtLocationWithRotation(graphic, atX, atY,withAngle) {
 }
 
 function colorText(showWords, textX,textY, fillColor, font = "30px Arial", shadow = false) {
+	canvasContext.textAlign = "center";
+
 	canvasContext.font = font;
     if (shadow) {
         canvasContext.fillStyle = 'black';
-        canvasContext.fillText(showWords, textX+1, textY+1);    
+        canvasContext.fillText(showWords, textX, textY);    
     }
 	canvasContext.fillStyle = fillColor;
     canvasContext.fillText(showWords, textX, textY);
