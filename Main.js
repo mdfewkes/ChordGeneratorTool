@@ -39,12 +39,13 @@ window.onload = function() {
 
 	mainInterface = new MainInterface(canvas.width, canvas.height);
 
-	nextFramw();
+	nextFrame();
 }
 
-function nextFramw() {
+function nextFrame() {
+	colorRect(0, 0, canvas.width, canvas.height, 'lightcyan');
 	mainInterface.update();
 	mouseJustPressed = false;
 
-	window.requestAnimationFrame(nextFramw);
+	window.requestAnimationFrame(nextFrame);
 }
