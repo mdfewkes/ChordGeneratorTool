@@ -152,7 +152,7 @@ class UICloseButton extends UIButton {
 	}
 
 	activate() {
-		this.parent.parent.active.splice(this.parent.parent.active.indexOf(this,parent), 1);
+		this.parent.parent.active.splice(this.parent.parent.active.indexOf(this.parent), 1);
 	}
 }
 
@@ -192,6 +192,7 @@ class UIMoveBar extends UIElement {
 		}
 	}
 }
+
 class UITextLabel extends UIElement {
 	constructor(name, x, y, w, h, parent) {
 		super(name, x, y, w, h, parent);
@@ -329,8 +330,8 @@ class RuleBox extends UIElement {
 
 		this.closeUI = new UICloseButton("Close RuleBox", 310, 0, 15, 15, this)
 		this.closeUI.activate = function() {
-			this.parent.parent.active.splice(this.parent.parent.active.indexOf(this,parent), 1);
-			this.parent.parent.parts.splice(this.parent.parent.parts.indexOf(this,parent), 1);
+			this.parent.parent.active.splice(this.parent.parent.active.indexOf(this.parent), 1);
+			this.parent.parent.parts.splice(this.parent.parent.parts.indexOf(this.parent), 1);
 		}
 		this.addPart(this.closeUI);
 	}
@@ -344,5 +345,4 @@ class RuleBox extends UIElement {
 		this.startingQualityUI.value = 0;
 		this.endingQualityUI.value = 0;
 	}
-
 }
