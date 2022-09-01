@@ -278,7 +278,7 @@ function ChordGenerator() {
 	}
 
 	this.setRules = function(newRules)  {
-		rules = newRules;
+		rules = newRules;;
 	}
 
 	this.addRules = function(newRules)  {

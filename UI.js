@@ -10,16 +10,14 @@ function MainInterface(screenWidth, screenHeight) {
 
 	parts = [
 		new UIElement("testpanel", 100, 100, 600, 300, this),
+		new RuleBoxBox("The Box O Rules", 0, 0, 345, 600, this),
 	]
 	var activeParts = [
-		parts[0],
+		parts[1],
 	]
 	this.active = activeParts;
 
-	parts[0].addPart(new UIMoveBar("testmover", 0, 0, 600, 15, parts[0]))
-	parts[0].addPart(new UIButton("testbutton", 20, 20, 20, 20, parts[0]))
-	parts[0].addPart(new RuleBox("testrulebox1", 150, 20, 0, 0, parts[0]));
-	parts[0].addPart(new RuleBox("testrulebox2", 150, 100, 0, 0, parts[0]));
+	parts[0].addPart(new UIButton("testbutton", 20, 20, 20, 20, parts[0]));
 
 
 	this.update = function() {
@@ -333,11 +331,11 @@ class RuleBox extends UIElement {
 			this.parent.parent.active.splice(this.parent.parent.active.indexOf(this.parent), 1);
 			this.parent.parent.parts.splice(this.parent.parent.parts.indexOf(this.parent), 1);
 		}
-		this.addPart(this.closeUI);
+		this.addPart(this.closeUI, false);
 	}
 
 	getRule() {
-		return new Rule(this.rootMotionUI.value - 11, this.startingQualityUI.value, this.endingQualityUI.value);
+		return new Rule((this.rootMotionUI.value - 11) * -1, this.startingQualityUI.value, this.endingQualityUI.value);
 	}
 
 	resetRule() {
@@ -345,4 +343,36 @@ class RuleBox extends UIElement {
 		this.startingQualityUI.value = 0;
 		this.endingQualityUI.value = 0;
 	}
+}
+
+class RuleBoxBox extends UIElement {
+	constructor(name, x, y, w, h, parent) {
+		super(name, x, y, w, h, parent);
+
+		this.ruleBoxes = [];
+
+		for (var i = 0; i < 8; i++) {
+			var newRule = new RuleBox("Rule " + i, 10, 10 + i * 70, 0, 0, this)
+			this.addPart(newRule);
+			this.ruleBoxes.push(newRule);
+		}
+
+		var genButton = new UIButton("Generate", 0, 0, 10, 10, this);
+		genButton.activate = function() {
+			this.parent.setRules();
+			console.table(generator.generateProgressionOfLength(4, true, new Chord()));
+		}
+		this.addPart(genButton);
+		
+	}
+
+	setRules() {
+		var newRules = []
+		for (var i = 0; i < this.ruleBoxes.length; i++) {
+			newRules.push(this.ruleBoxes[i].getRule());
+		}
+
+		generator.setRules(newRules);
+	}
+
 }

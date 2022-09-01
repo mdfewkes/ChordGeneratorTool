@@ -6,6 +6,8 @@ var mouseY = -1;
 var mouseIsDown = false;
 var mouseJustPressed = true;
 
+var generator = new ChordGenerator();
+
 function calculateMousePos(evt) {
 	var rect = canvas.getBoundingClientRect(),
 	root = document.documentElement;
