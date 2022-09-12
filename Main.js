@@ -4,7 +4,8 @@ var mainInterface;
 var mouseX = -1;
 var mouseY = -1;
 var mouseIsDown = false;
-var mouseJustPressed = true;
+var mouseJustPressed = false;
+var mouseJustReleased = false;
 
 var generator = new ChordGenerator();
 
@@ -27,6 +28,7 @@ function mouseDown(evt) {
 
 function mouseUp(evt) {
 	mouseIsDown = false;
+	mouseJustReleased = true;
 }
 
 
@@ -48,6 +50,7 @@ function nextFrame() {
 	colorRect(0, 0, canvas.width, canvas.height, 'lightcyan');
 	mainInterface.update();
 	mouseJustPressed = false;
+	mouseJustReleased = false;
 
 	window.requestAnimationFrame(nextFrame);
 }
