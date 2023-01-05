@@ -119,6 +119,46 @@ class UIElement {
 	}
 }
 
+class UIMaskBox extends UIElement {
+	constructor(name, x, y, w, h, parent) {
+		super(name, x, y, w, h, parent);
+
+		this.xoffset = 0;
+		this.yoffset = 0;
+		this.canvas = document.createElement("Canvas");
+		this.canvasContext = this.canvas.getContext("2d");
+
+		this.canvas.width = canvas.width;
+		this.canvas.height = canvas.height;
+	}
+
+	draw() {
+		var stowContext = canvasContext;
+		canvasContext = this.canvasContext;
+
+		colorRect(this.x + this.xoffset, this.y + this.yoffset, canvasContext.width, canvasContext.height, 'black');
+
+		this.x += this.xoffset;
+		this.y += this.yoffset;
+		
+		for (var i = 0; i < this.active.length; i++) {
+			this.active[i].updatePosition();
+			this.active[i].draw();
+		}
+
+		this.x -= this.xoffset;
+		this.y -= this.yoffset;
+		canvasContext = stowContext;
+
+		canvasContext.drawImage( this.canvas,
+			this.x , this.y,
+			this.w, this.h,
+			this.x, this.y,
+			this.w, this.h
+		);
+	}
+}
+
 class UIButton extends UIElement {
 	constructor(name, x, y, w, h, parent) {
 		super(name, x, y, w, h, parent);
@@ -363,9 +403,12 @@ class RuleBoxBox extends UIElement {
 
 		this.ruleBoxes = [];
 
+		this.mask = new UIMaskBox(this.name + "_RuleMask", this.x + 10, this.y + 10, this.w - 20, this.h - 20, this);
+		this.addPart(this.mask);
+
 		for (var i = 0; i < 8; i++) {
 			var newRule = new RuleBox("Rule " + i, 10, 10 + i * 70, 0, 0, this)
-			this.addPart(newRule);
+			this.mask.addPart(newRule);
 			this.ruleBoxes.push(newRule);
 		}
 
