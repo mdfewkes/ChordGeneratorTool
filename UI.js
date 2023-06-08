@@ -14,9 +14,14 @@ class UIElement {
 	}
 
 	update() {
+		this.onUpdate();
+
 		for (var i = this.active.length-1; i >= 0; i--) {
 			this.active[i].update();
 		}
+	}
+
+	onUpdate() {
 	}
 
 	draw() {
@@ -30,6 +35,22 @@ class UIElement {
 	onDraw() {
 		colorRect(this.x, this.y, this.w, this.h, 'blue');
 		colorRect(this.x + borderSize, this.y + borderSize, this.w - borderBack, this.h - borderBack, 'lightblue');		
+	}
+
+	leftMouseClick(x, y) {
+		this.setMostActive();
+
+		for (var i = this.active.length -1; i >= 0; i--) {
+			if (isInElement(this.active[i], x, y)) {
+				this.active[i].leftMouseClick(x, y);
+				return;
+			}
+		}
+
+		this.onLeftMouseClick();
+	}
+
+	onLeftMouseClick() {
 	}
 
 	addPart(part, isActive = true) {
@@ -56,17 +77,21 @@ class UIElement {
 	}
 
 	setMostActive() {
-		//this.parent.active.push(this.parent.active.splice(this.parent.active.indexOf(this), 1)[0]);
-		this.parent.setMostActiveChild(this);
+		if (!this.isActive()) {
+			this.setActive();
+			return;
+		}
+
+		this.parent.active.push(this.parent.active.splice(this.parent.active.indexOf(this), 1)[0]);
 	}
 
-	setMostActiveChild(child) {
-		if (!child.isActive()) child.setActive();;
+	setLeastActive() {
+		this.setActive(false);
 
-		this.active.push(this.active.splice(this.active.indexOf(child), 1)[0]);
+		this.parent.active.splice(0, 0, this);
 	}
 
-	setActive(isActive) {
+	setActive(isActive = true) {
 		if (isActive && !this.isActive()) {
 			this.parent.active.push(this);
 			return;
@@ -79,17 +104,6 @@ class UIElement {
 
 	isActive() {
 		return this.parent.active.includes(this);
-	}
-
-	leftMouseClick(x, y) {
-		this.setMostActive();
-
-		for (var i = this.active.length -1; i >= 0; i--) {
-			if (isInElement(this.active[i], x, y)) {
-				this.active[i].leftMouseClick(x, y);
-				break;
-			}
-		}
 	}
 
 	updatePosition(x = this.xoff, y = this.yoff, w = this.w, h = this.h) {
@@ -122,13 +136,11 @@ class UIMainInterface extends UIElement {
 		super(name, 0, 0, screenWidth, screenHeight, {x:0, y:0});
 	}
 
-	update() {
-		super.update();
-
+	onUpdate() {
 		if (mouseJustPressed /*&& isInElement(this, mouseX, mouseY)*/) {
 			this.leftMouseClick(mouseX, mouseY);
 		}
-	}k
+	}
 
 	onDraw() {}
 	addToParent() {}
@@ -151,6 +163,22 @@ class UIMaskBox extends UIElement {
 
 		this.canvas.width = canvas.width;
 		this.canvas.height = canvas.height;
+
+		this.drawBorder = false;
+	}
+
+	onUpdate() {
+		if (!this.offsetChanged) return;
+
+		this.x += this.xoffset;
+		this.y += this.yoffset;
+
+		for (var i = 0; i < this.active.length; i++) {
+			this.active[i].updatePosition();
+		}
+
+		this.x -= this.xoffset;
+		this.y -= this.yoffset;
 	}
 
 	draw() {
@@ -159,16 +187,10 @@ class UIMaskBox extends UIElement {
 		canvas = this.canvas;
 		canvasContext = this.canvasContext;
 
-		colorRect(0, 0, canvas.width, canvas.height, 'lightblue');
-
-		if (this.offsetChanged) {
-			this.x += this.xoffset;
-			this.y += this.yoffset;
-			for (var i = 0; i < this.active.length; i++) {
-				this.active[i].updatePosition();
-			}
-			this.x -= this.xoffset;
-			this.y -= this.yoffset;
+		if (this.drawBorder) {
+			super.onDraw();
+		} else {
+			colorRect(this.x, this.y, this.w, this.h, 'lightblue');		
 		}
 
 		for (var i = 0; i < this.active.length; i++) {
@@ -182,18 +204,13 @@ class UIMaskBox extends UIElement {
 	}
 
 	onDraw() {
-		colorRect(this.x, this.y, this.w, this.h, 'blue');
-		
 		canvasContext.drawImage( 
 			this.canvas,
-			this.x + borderSize, this.y + borderSize, 
-			this.w - borderBack, this.h - borderBack,
-			this.x + borderSize, this.y + borderSize,
-			this.w - borderBack, this.h - borderBack
+			this.x, this.y, 
+			this.w, this.h,
+			this.x, this.y,
+			this.w, this.h
 		);
-
-		colorLine(this.xbound, this.ybound, this.xbound, this.ybound + this.wbound, 5, "red");
-		colorLine(this.xbound, this.ybound, this.xbound + this.hbound, this.ybound, 5, "red");
 	}
 
 	setOffset(x, y) {
@@ -228,8 +245,7 @@ class UIButton extends UIElement {
 		super(name, x, y, w, h, parent);
 	}
 
-	leftMouseClick(x, y) {
-		super.leftMouseClick(x, y);
+	onLeftMouseClick() {
 		this.onClick();
 	}
 
@@ -245,15 +261,15 @@ class UIButton extends UIElement {
 	}
 
 	onClick() {
-		console.log("click");
+		console.log("clicked " + this.name);
 	}
 }
 
 class UIButtonWToolTip extends UIButton {
-	constructor(name, x, y, w, h, parent, toolTip = "") {
+	constructor(name, x, y, w, h, parent) {
 		super(name, x, y, w, h, parent);
 
-		this.toolTip = toolTip;
+		this.toolTip = "";
 		this.textAlignment = "start";
 	}
 
@@ -261,18 +277,20 @@ class UIButtonWToolTip extends UIButton {
 		super.onDraw();
 
 		if (this.toolTip != "" && isInElement(this, mouseX, mouseY)) {
-			colorText(this.toolTip, mouseX, mouseY, "white", "14px Arial", this.textAlignment);
+			colorText(this.toolTip, mouseX+1, mouseY+1, "white", "14px Arial", this.textAlignment);
+			colorText(this.toolTip, mouseX-1, mouseY+1, "white", "14px Arial", this.textAlignment);
+			colorText(this.toolTip, mouseX, mouseY-1, "white", "14px Arial", this.textAlignment);
 			colorText(this.toolTip, mouseX, mouseY, "black", "14px Arial", this.textAlignment);
 		}
 	}
 }
 
 class UIToggleWToolTip extends UIButtonWToolTip {
-	constructor(name, x, y, w, h, parent, toolTip = "", toggle = false) {
+	constructor(name, x, y, w, h, parent) {
 		super(name, x, y, w, h, parent);
 
-		this.toolTip = toolTip;
-		this.toggle = toggle;
+		this.toolTip = "";
+		this.toggle = false;
 	}
 
 	onDraw() {
@@ -323,9 +341,7 @@ class UIMoveBar extends UIElement {
 		this.parentY = -1;
 	}
 
-	leftMouseClick(x, y) {
-		super.leftMouseClick(x, y);
-
+	onLeftMouseClick() {
 		this.grabbed = true;
 		this.grabbedX = mouseX;
 		this.grabbedY = mouseY;
@@ -333,7 +349,7 @@ class UIMoveBar extends UIElement {
 		this.parentY = this.parent.y;
 	}
 
-	update() {
+	onUpdate() {
 		if (!mouseIsDown || mouseX < 0 || mouseY < 0 || mouseX >= screenWidth || mouseY >= screenHeight) {
 			this.grabbed = false;
 		}
@@ -343,8 +359,6 @@ class UIMoveBar extends UIElement {
 			var newY = this.parentY + mouseY - this.grabbedY;
 			this.parent.updatePosition(newX, newY);
 		}
-
-		super.update();
 	}
 
 	onDraw() {
@@ -381,9 +395,7 @@ class UIDropdown extends UIElement {
 		this.updateListElement();
 	}
 
-	leftMouseClick(x, y) {
-		super.leftMouseClick(x, y);
-
+	onLeftMouseClick() {
 		if (!this.open) {
 			this.openList();
 		}
@@ -432,9 +444,7 @@ class UIDropdownList extends UIElement {
 		this.justOpened = false;
 	}
 
-	update() {
-		super.update();
-
+	onUpdate() {
 		if (mouseJustPressed && !this.justOpened) {
 			if (isInElement(this, mouseX, mouseY)) {
 				this.parent.value = this.quantizeMousePositionY();

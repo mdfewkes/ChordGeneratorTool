@@ -1,3 +1,5 @@
+const QualityCount = 4;
+
 const Quality = {
 	Major: 0,
 	Minor: 1,
@@ -18,6 +20,22 @@ const QualityWeight = {
 	2: 0.5,
 	3: 0.25,
 }
+
+const QualityChroma = {
+	0: "10001001",
+	1: "10010001",
+	2: "1001001",
+	3: "100010001",
+}
+
+const QualitySymbol = {
+	0: "",
+	1: "m",
+	2: "°",
+	3: "+",
+}
+
+const NoteCount = 12;
 
 const NoteName = {
 	"Cb": 11,
@@ -43,7 +61,7 @@ const NoteName = {
 	"B#": 0
 }
 
-const NoteNumber = {
+const NoteNumberSharps = {
 	0: "C",
 	1: "C#",
 	2: "D",
@@ -58,36 +76,39 @@ const NoteNumber = {
 	11: "B"
 }
 
+const NoteNumberFlats = {
+	0: "C",
+	1: "Db",
+	2: "D",
+	3: "Eb",
+	4: "E",
+	5: "F",
+	6: "Gb",
+	7: "G",
+	8: "Ab",
+	9: "A",
+	10: "Bb",
+	11: "B"
+}
+
+var NoteNumber = NoteNumberFlats;
+
 function Chord(root = 0, quality = Quality.Major) {
-	this.root = (root < 0 ? root + 12 : root) % 12;
+	this.root = (root < 0 ? root + NoteCount : root) % NoteCount;
 	this.quality = quality;
 	this.weight = 1;
 
 	this.getChroma = function() {
-		this.root = (this.root < 0 ? this.root + 12 : this.root) % 12;
-		var chordMask = "1";
+		this.root = (this.root < 0 ? this.root + NoteCount : this.root) % NoteCount;
 
-		switch (quality) {
-			case Quality.Major:
-				chordMask = "10001001";
-				break;
-			case Quality.Minor:
-				chordMask = "10010001";
-				break;
-			case Quality.Diminished:
-				chordMask = "1001001";
-				break;
-			case Quality.Augmented:
-				chordMask = "100010001";
-				break;
-		}
-		chordMask = chordMask.padEnd(12, "0");
+		var chordMask = QualityChroma[quality];
+		chordMask = chordMask.padEnd(NoteCount, "0");
 
 		return chordMask;
 	}
 
 	this.getChordMask = function() {
-		this.root = (this.root < 0 ? this.root + 12 : this.root) % 12;
+		this.root = (this.root < 0 ? this.root + NoteCount : this.root) % NoteCount;
 		var chordMask = this.getChroma();
 
 		const rotate = chordMask.length - (this.root % chordMask.length);
@@ -97,30 +118,17 @@ function Chord(root = 0, quality = Quality.Major) {
 	}
 
 	this.getSymbol = function() {
-		this.root = (this.root < 0 ? this.root + 12 : this.root) % 12;
-		var symbol = NoteNumber[this.root];
+		this.root = (this.root < 0 ? this.root + NoteCount : this.root) % NoteCount;
 
-		switch (quality) {
-			case Quality.Major:
-				symbol += "";
-				break;
-			case Quality.Minor:
-				symbol += "m";
-				break;
-			case Quality.Diminished:
-				symbol += "°";
-				break;
-			case Quality.Augmented:
-				symbol += "+";
-				break;
-		}
+		var symbol = NoteNumber[this.root];
+		symbol += QualitySymbol[quality];
 
 		return symbol;
 	}
 }
 
 function Rule(rootMotion = 0, startingQuality = Quality.Major, endingQuality = Quality.Major) {
-	this.rootMotion = (rootMotion < 0 ? rootMotion + 12 : rootMotion) % 12;
+	this.rootMotion = (rootMotion < 0 ? rootMotion + NoteCount : rootMotion) % NoteCount;
 	this.startingQuality = startingQuality;
 	this.endingQuality = endingQuality;
 }
@@ -220,8 +228,8 @@ var testRules = [
 
 function ChordGenerator() {
 	var openDomain = [];
-	for (var i = 0; i < 12; i++) {
-		for (var j = 0; j < 4; j++) {
+	for (var i = 0; i < NoteCount; i++) {
+		for (var j = 0; j < QualityCount; j++) {
 			openDomain.push(new Chord(i, j));
 			openDomain[openDomain.length-1].weight = QualityWeight[j];
 		}
@@ -232,12 +240,10 @@ function ChordGenerator() {
 	var progression = [];
 	var rules = testRules;
 
-	var failsafeRules = [
-		new Rule(0, Quality.Major, Quality.Major),
-		new Rule(0, Quality.Minor, Quality.Minor),
-		new Rule(0, Quality.Diminished, Quality.Diminished),
-		new Rule(0, Quality.Augmented, Quality.Augmented),
-	]
+	var failsafeRules = []
+	for (var i = 0; i < QualityCount; i++) {
+		failsafeRules.push(new Rule(0, i, i));
+	}
 
 	this.generateProgressionOfLength = function(numberOfChords, loop = false, firstChord = 0, lastChord = 0) {
 		var passCell = [];
@@ -277,6 +283,10 @@ function ChordGenerator() {
 		return progression;
 	}
 
+	this.getRules = function() {
+		return rules;
+	}
+
 	this.setRules = function(newRules)  {
 		rules = newRules;;
 	}
@@ -299,8 +309,8 @@ function ChordGenerator() {
 
 	this.setScaleMask = function(scaleMask, divergence = 0) {
 		openDomain = [];
-		for (var i = 0; i < 12; i++) {
-			for (var j = 0; j < 4; j++) {
+		for (var i = 0; i < NoteCount; i++) {
+			for (var j = 0; j < QualityCount; j++) {
 				openDomain.push(new Chord(i, Quality[QualityDecode[j]]));
 			}
 		}
@@ -352,13 +362,13 @@ function ChordGenerator() {
 			for (var i = 0; i < progression.length; i++) {
 				propagate(i);
 			}
-		}
-		if (isBroken()) {
-			console.log("Output still gridlocked, loosening restrictions")
-			forgivingOutput = true;
-			progression = JSON.parse(JSON.stringify(cells));
-		}
 
+			if (isBroken()) {
+				console.log("Output still gridlocked, loosening restrictions")
+				forgivingOutput = true;
+				progression = JSON.parse(JSON.stringify(cells));
+			}
+		}
 
 		//console.log(JSON.parse(JSON.stringify(progression)));
 		while (!isCollapsed()) {
@@ -481,7 +491,7 @@ function ChordGenerator() {
 	}
 
 	function rulePossible(chord1, chord2, rule) {
-		var newRoot = (chord1.root + rule.rootMotion < 0 ? chord1.root + rule.rootMotion + 12 : chord1.root + rule.rootMotion) % 12;
+		var newRoot = (chord1.root + rule.rootMotion < 0 ? chord1.root + rule.rootMotion + NoteCount : chord1.root + rule.rootMotion) % NoteCount;
 		//console.log(chord1.root + ":" + chord1.quality + " " + chord2.root + ":" + chord2.quality + " " + rule.startingQuality + ":" + rule.endingQuality + ":" + rule.rootMotion)
 		return (chord1.quality == rule.startingQuality) 
 		  && (chord2.quality == rule.endingQuality) 
