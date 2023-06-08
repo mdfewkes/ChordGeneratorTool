@@ -1,50 +1,107 @@
 var borderSize = 3;
 var borderBack = borderSize * 2;
 
-function MainInterface(screenWidth, screenHeight) {
-	this.name = "Main Interface";
-	this.x = 0;
-	this.y = 0;
-	this.w = screenWidth;
-	this.h = screenHeight;
+class UIElement {
+	constructor(name, x, y, w, h, parent) {
+		this.name = name;
+		this.parent = parent;
 
-	parts = [
-		new UIElement("testpanel", 100, 100, 600, 300, this),
-		new RuleBoxBox("The Box O Rules", 0, 0, 345, 600, this),
-		new ChordDisplayBox("Chord Display Box", 400, 0, 400, 600, this),
-	]
-	var activeParts = [
-		parts[1],
-		parts[2],
-	]
-	this.active = activeParts;
+		this.parts = [];
+		this.active = [];
 
-	parts[0].addPart(new UIButton("testbutton", 20, 20, 20, 20, parts[0]));
-	parts[0].addPart(new ChordBox("testchord", 40, 40, 20, 20, parts[0]));
-	parts[0].addPart(new ChordDisplay("testchord", 60, 20, 200, 20, parts[0]));
+		this.updatePosition(x, y, w, h);
 
-	this.update = function() {
-		if (mouseJustPressed && isInElement(this, mouseX, mouseY)) {
-			leftMouseClick(mouseX, mouseY);
-		}
-
-		draw();
 	}
 
-	function leftMouseClick(x, y) {
-		for (var i = activeParts.length -1; i >= 0; i--) {
-			if (isInElement(activeParts[i], x, y)) {
-				activeParts[i].leftMouseClick(x, y);
+	update() {
+		for (var i = this.active.length-1; i >= 0; i--) {
+			this.active[i].update();
+		}
+	}
+
+	draw() {
+		this.onDraw();
+
+		for (var i = 0; i < this.active.length; i++) {
+			this.active[i].draw();
+		}
+	}
+
+	onDraw() {
+		colorRect(this.x, this.y, this.w, this.h, 'blue');
+		colorRect(this.x + borderSize, this.y + borderSize, this.w - borderBack, this.h - borderBack, 'lightblue');		
+	}
+
+	addPart(part, isActive = true) {
+		this.parts.push(part);
+		if (isActive) this.active.push(part);
+		return part;
+
+	}
+
+	removePart(part) {
+		var partIndex = this.parts.indexOf(part);
+		if (partIndex < 0) return;
+
+		this.parts[partIndex].setActive(false);
+		this.parts.splice(partIndex, 1);
+	}
+
+	addToParent() {
+		this.parent.addPart(this);
+	}
+
+	removeFromParent() {
+		this.parent.removePart(this);
+	}
+
+	setMostActive() {
+		//this.parent.active.push(this.parent.active.splice(this.parent.active.indexOf(this), 1)[0]);
+		this.parent.setMostActiveChild(this);
+	}
+
+	setMostActiveChild(child) {
+		if (!child.isActive()) child.setActive();;
+
+		this.active.push(this.active.splice(this.active.indexOf(child), 1)[0]);
+	}
+
+	setActive(isActive) {
+		if (isActive && !this.isActive()) {
+			this.parent.active.push(this);
+			return;
+		}
+		if (!isActive && this.isActive()) {
+			this.parent.active.splice(this.parent.active.indexOf(this), 1);
+			return;
+		}
+	}
+
+	isActive() {
+		return this.parent.active.includes(this);
+	}
+
+	leftMouseClick(x, y) {
+		this.setMostActive();
+
+		for (var i = this.active.length -1; i >= 0; i--) {
+			if (isInElement(this.active[i], x, y)) {
+				this.active[i].leftMouseClick(x, y);
 				break;
 			}
 		}
 	}
 
-	function draw() {
-		colorRect(this.x, this.y, this.w, this.h, 'lightcyan');
+	updatePosition(x = this.xoff, y = this.yoff, w = this.w, h = this.h) {
+		this.xoff = x;
+		this.yoff = y;
+		this.x = this.xoff + this.parent.x;
+		this.y = this.yoff + this.parent.y;
+		this.w = w;
+		this.h = h;
 
-		for (var i = 0; i < activeParts.length; i++) {
-			activeParts[i].draw();
+		for (var i = 0; i < this.parts.length; i++) {
+			this.parts[i].updatePosition();
 		}
 	}
 }
@@ -60,63 +117,25 @@ function isInElement(uiElement, x, y) {
     return boolResult;
 }
 
-class UIElement {
-	constructor(name, x, y, w, h, parent) {
-		this.name = name;
-		this.parent = parent;
-		this.xoff = x;
-		this.yoff = y;
-		this.x = this.xoff + this.parent.x;
-		this.y = this.yoff + this.parent.y;
-		this.w = w;
-		this.h = h;
-
-		this.parts = [];
-		this.active = [];
+class UIMainInterface extends UIElement {
+	constructor(name, screenWidth, screenHeight) {
+		super(name, 0, 0, screenWidth, screenHeight, {x:0, y:0});
 	}
 
-	addPart(part, isActive = true) {
-		this.parts.push(part);
-		if (isActive) this.active.push(part);
-	}
+	update() {
+		super.update();
 
-	setMostActive() {
-		this.parent.active.push(this.parent.active.splice(this.parent.active.indexOf(this), 1)[0]);
-	}
-
-	leftMouseClick(x, y) {
-		this.setMostActive();
-
-		for (var i = this.active.length -1; i >= 0; i--) {
-			if (isInElement(this.active[i], x, y)) {
-				this.active[i].leftMouseClick(x, y);
-				break;
-			}
+		if (mouseJustPressed /*&& isInElement(this, mouseX, mouseY)*/) {
+			this.leftMouseClick(mouseX, mouseY);
 		}
 	}
 
-	updatePosition(x = this.xoff, y = this.yoff, w = this.w, h = this.h, parent = this.parent) {
-		this.parent = parent;
-		this.xoff = x;
-		this.yoff = y;
-		this.x = this.xoff + this.parent.x;
-		this.y = this.yoff + this.parent.y;
-		this.w = w;
-		this.h = h;
-
-		for (var i = 0; i < this.parts.length; i++) {
-			this.parts[i].updatePosition();
-		}
-	}
-
-	draw() {
-		colorRect(this.x, this.y, this.w, this.h, 'blue');
-		colorRect(this.x + borderSize, this.y + borderSize, this.w - borderBack, this.h - borderBack, 'lightblue');
-
-		for (var i = 0; i < this.active.length; i++) {
-			this.active[i].draw();
-		}
-	}
+	onDraw() {}
+	addToParent() {}
+	removeFromParent() {}
+	setMostActive() {}
+	setActive(isActive) {}
+	isActive() { return true; }
 }
 
 class UIMaskBox extends UIElement {
@@ -125,6 +144,7 @@ class UIMaskBox extends UIElement {
 
 		this.xoffset = 0;
 		this.yoffset = 0;
+
 		this.canvas = document.createElement("Canvas");
 		this.canvasContext = this.canvas.getContext("2d");
 
@@ -133,14 +153,16 @@ class UIMaskBox extends UIElement {
 	}
 
 	draw() {
+		var stowCanvas = canvas;
 		var stowContext = canvasContext;
+		canvas = this.canvas;
 		canvasContext = this.canvasContext;
 
-		colorRect(this.x + this.xoffset, this.y + this.yoffset, canvasContext.width, canvasContext.height, 'black');
+		colorRect(0, 0, canvas.width, canvas.height, 'lightblue');
 
 		this.x += this.xoffset;
 		this.y += this.yoffset;
-		
+
 		for (var i = 0; i < this.active.length; i++) {
 			this.active[i].updatePosition();
 			this.active[i].draw();
@@ -148,13 +170,22 @@ class UIMaskBox extends UIElement {
 
 		this.x -= this.xoffset;
 		this.y -= this.yoffset;
+
+		canvas = stowCanvas;
 		canvasContext = stowContext;
 
-		canvasContext.drawImage( this.canvas,
-			this.x , this.y,
-			this.w, this.h,
-			this.x, this.y,
-			this.w, this.h
+		this.onDraw();
+	}
+
+	onDraw() {
+		colorRect(this.x, this.y, this.w, this.h, 'blue');
+		
+		canvasContext.drawImage( 
+			this.canvas,
+			this.x + borderSize, this.y + borderSize, 
+			this.w - borderBack, this.h - borderBack,
+			this.x + borderSize, this.y + borderSize,
+			this.w - borderBack, this.h - borderBack
 		);
 	}
 }
@@ -165,35 +196,84 @@ class UIButton extends UIElement {
 	}
 
 	leftMouseClick(x, y) {
-		this.setMostActive();
-		this.activate();
+		super.leftMouseClick(x, y);
+		this.onClick();
 	}
 
-	draw() {
-		colorRect(this.x, this.y, this.w, this.h, 'blue');
-		colorRect(this.x + borderSize, this.y + borderSize, this.w - borderBack, this.h - borderBack, 'lightblue');
+	onDraw() {
+		super.onDraw();
 
 		if (isInElement(this, mouseX, mouseY)) {
 			colorRect(this.x + borderSize, this.y + borderSize, this.w - borderBack, this.h - borderBack, 'dodgerblue');
-			if (mouseJustPressed) colorCircle(this.x + this.w * 0.5, this.y + this.h * 0.5, (this.w + this.h) * 0.25 + 10, 'white');
+			if (mouseJustPressed) {
+				colorRect(this.x + borderSize, this.y + borderSize, this.w - borderBack, this.h - borderBack, 'white');
+			}
 		}
 	}
 
-	activate() {
+	onClick() {
 		console.log("click");
 	}
 }
 
+class UIButtonWToolTip extends UIButton {
+	constructor(name, x, y, w, h, parent, toolTip = "") {
+		super(name, x, y, w, h, parent);
+
+		this.toolTip = toolTip;
+	}
+
+	onDraw() {
+		super.onDraw();
+
+		if (this.toolTip != "" && isInElement(this, mouseX, mouseY)) {
+			colorTextOutline(this.toolTip, mouseX + 14, mouseY + 11, "black", "white");
+		}
+	}
+}
+
+class UIToggleWToolTip extends UIButtonWToolTip {
+	constructor(name, x, y, w, h, parent, toolTip = "", toggle = false) {
+		super(name, x, y, w, h, parent);
+
+		this.toolTip = toolTip;
+		this.toggle = toggle;
+	}
+
+	onDraw() {
+		super.onDraw();
+
+		if (this.toggle) {
+			colorRect(this.x + borderSize*2, this.y + borderSize*2, this.w - borderBack*2, this.h - borderBack*2, 'blue');		
+		}
+	}
+
+	onClick() {
+		this.toggle = this.toggle ? false : true;
+
+		if (this.toggle) this.onTrue();
+		else this.onFalse();
+	}
+
+	onTrue() {
+
+	}
+
+	onFalse() {
+
+	}
+}
+
 class UICloseButton extends UIButton {
-	draw() {
-		super.draw();
+	onDraw() {
+		super.onDraw();
 
 		colorLine(this.x, this.y, this.x + this.w, this.y + this.h, 3, 'blue');
 		colorLine(this.x, this.y + this.h, this.x + this.w, this.y, 3, 'blue');
 	}
 
-	activate() {
-		this.parent.parent.active.splice(this.parent.parent.active.indexOf(this.parent), 1);
+	onClick() {
+		this.parent.setActive(false);
 	}
 }
 
@@ -209,7 +289,7 @@ class UIMoveBar extends UIElement {
 	}
 
 	leftMouseClick(x, y) {
-		this.setMostActive();
+		super.leftMouseClick(x, y);
 
 		this.grabbed = true;
 		this.grabbedX = mouseX;
@@ -218,11 +298,8 @@ class UIMoveBar extends UIElement {
 		this.parentY = this.parent.y;
 	}
 
-	draw() {
-		colorRect(this.x, this.y, this.w, this.h, 'blue');
-		colorRect(this.x + borderSize, this.y + borderSize, this.w - borderBack, this.h - borderBack, 'skyblue');
-
-		if (!mouseIsDown || mouseX < 0 || mouseX >= canvas.width || mouseY < 0 || mouseY >= canvas.height) {
+	update() {
+		if (!mouseIsDown || mouseX < 0 || mouseY < 0 || mouseX >= screenWidth || mouseY >= screenHeight) {
 			this.grabbed = false;
 		}
 
@@ -231,6 +308,13 @@ class UIMoveBar extends UIElement {
 			var newY = this.parentY + mouseY - this.grabbedY;
 			this.parent.updatePosition(newX, newY);
 		}
+
+		super.update();
+	}
+
+	onDraw() {
+		super.onDraw();
+		colorRect(this.x + borderSize, this.y + borderSize, this.w - borderBack, this.h - borderBack, 'skyblue');
 	}
 }
 
@@ -243,7 +327,7 @@ class UITextLabel extends UIElement {
 		this.label = "";
 	}
 
-	draw() {
+	onDraw() {
 		colorText(this.label, this.x, this.y, 'black', this.size + "px Arial", this.textAlignment)
 	}
 }
@@ -260,10 +344,30 @@ class UIDropdown extends UIElement {
 
 		this.open = false;
 		this.updateListElement();
-		this.activeIndex = -1;
+	}
+
+	leftMouseClick(x, y) {
+		super.leftMouseClick(x, y);
+
+		if (!this.open) {
+			this.openList();
+		}
+	}
+
+	onDraw() {
+		colorRect(this.x, this.y, this.w, this.h, 'blue');
+		colorRect(this.x + borderSize, this.y + borderSize, this.w - borderBack, this.h - borderBack, 'skyblue');
+		colorText(this.list[this.value], this.x + this.w * 0.5, this.y + this.size, 'black', this.parent.size + "px Arial", this.textAlignment);
+	}
+
+	updatePosition(x = this.xoff, y = this.yoff, w = this.w, h = this.h) {
+		super.updatePosition(x, y, w, h);
+		this.updateListElement();
 	}
 
 	updateListElement() {
+		if (this.list == undefined) return;
+
 		this.parts.length = 0;
 		this.active.length = 0;
 		var height = this.list.length * (this.size + 3);
@@ -276,32 +380,13 @@ class UIDropdown extends UIElement {
 	closeList() {
 		if (this.active.length > 0) this.active.length = 0;
 		this.open = false;
+		mouseJustPressed = false;
 	}
 
-	leftMouseClick(x, y) {
-		this.setMostActive();
-
-		if (!this.open) {
-			this.active.push(this.parts[0]);
-			this.open = true;
-			//mouseJustPressed = false;
-			this.parts[0].justOpened = true;
-		}
-	}
-
-	draw() {
-		colorRect(this.x, this.y, this.w, this.h, 'blue');
-		colorRect(this.x + borderSize, this.y + borderSize, this.w - borderBack, this.h - borderBack, 'skyblue');
-		colorText(this.list[this.value], this.x + this.w * 0.5, this.y + this.size, 'black', this.parent.size + "px Arial", this.textAlignment);
-
-		for (var i = 0; i < this.active.length; i++) {
-			this.active[i].draw();
-		}
-	}
-
-	updatePosition(x = this.xoff, y = this.yoff, w = this.w, h = this.h, parent = this.parent) {
-		super.updatePosition(x, y, w, h, parent);
-		this.updateListElement();
+	openList() {
+		this.active.push(this.parts[0]);
+		this.open = true;
+		this.parts[0].justOpened = true;
 	}
 }
 
@@ -309,24 +394,30 @@ class UIDropdownList extends UIElement {
 	constructor(name, x, y, w, h, parent) {
 		super(name, x, y, w, h, parent);
 
-		this.justOpened = true;
+		this.justOpened = false;
 	}
 
-	draw() {
+	update() {
+		super.update();
+
 		if (mouseJustPressed && !this.justOpened) {
 			if (isInElement(this, mouseX, mouseY)) {
-				this.parent.value = this.quantizeMousePosition();
+				this.parent.value = this.quantizeMousePositionY();
 			}
 			this.parent.closeList();
 			return;
 		}
 
+		this.justOpened = false;
+	}
+
+	onDraw() {
 		colorRect(this.x, this.y, this.w, this.h, 'blue');
 		colorRect(this.x + borderSize, this.y + borderSize, this.w - borderBack, this.h - borderBack, 'skyblue');
 
 		var value = this.parent.value;
 		if (isInElement(this, mouseX, mouseY)) {
-			value = this.quantizeMousePosition();
+			value = this.quantizeMousePositionY();
 
 		}
 		colorRect(this.x + borderSize, this.y + borderSize + value * (this.parent.size + 3), this.w - borderBack, (this.parent.size + 3) - borderBack, 'lightcyan');
@@ -336,185 +427,9 @@ class UIDropdownList extends UIElement {
 		for (var i = 0; i < list.length; i++) {
 			colorText(list[i], this.x + this.w * 0.5, this.y + (this.parent.size + 3) * i + this.parent.size - 1, 'black', this.parent.size - 1 + "px Arial", this.parent.textAlignment);
 		}
-
-		this.justOpened = false;
 	}
 
-	quantizeMousePosition() {
+	quantizeMousePositionY() {
 		return Math.min(Math.floor((mouseY - this.y) / (this.parent.size + 3)), this.parent.list.length - 1);
 	}
-}
-
-class RuleBox extends UIElement {
-	constructor(name, x, y, w, h, parent) {
-		super(name, x, y, 325, 60, parent);
-
-		this.labels = [
-			new UITextLabel("RootMotion Label", 20, 25, 0, 0, this),
-			new UITextLabel("StartingQuality Label", 105, 25, 0, 0, this),
-			new UITextLabel("EndingingQuality Label", 210, 25, 0, 0, this)
-		]
-		this.labels[0].label = "Root Motion";
-		this.labels[1].label = "Starting Quality";
-		this.labels[2].label = "Ending Quality";
-		this.addPart(this.labels[0]);
-		this.addPart(this.labels[1]);
-		this.addPart(this.labels[2]);
-
-		this.rootMotionUI = new UIDropdown("RootMotion Dropdown", 20, 30, 75, 20, this);
-		this.rootMotionUI.list = ["+11", "+10", "+9", "+8", "+7", "+6", "+5", "+4", "+3", "+2", "+1", "0", "-1", "-2", "-3", "-4", "-5", "-6", "-7", "-8", "-9", "-10", "-11"];
-		this.rootMotionUI.value = 11;
-		this.rootMotionUI.center = true;
-		this.rootMotionUI.updateListElement();
-		this.addPart(this.rootMotionUI);
-
-		this.startingQualityUI = new UIDropdown("StartingQuality Dropdown", 105, 30, 95, 20, this);
-		this.startingQualityUI.list = ["Major", "Minor", "Diminished", "Augmented"];
-		this.startingQualityUI.updateListElement();
-		this.addPart(this.startingQualityUI);
-
-		this.endingQualityUI = new UIDropdown("EndingingQuality Dropdown", 210, 30, 95, 20, this);
-		this.endingQualityUI.list = ["Major", "Minor", "Diminished", "Augmented"];
-		this.endingQualityUI.updateListElement();
-		this.addPart(this.endingQualityUI);
-
-		this.closeUI = new UICloseButton("Close RuleBox", 310, 0, 15, 15, this)
-		this.closeUI.activate = function() {
-			this.parent.parent.active.splice(this.parent.parent.active.indexOf(this.parent), 1);
-			this.parent.parent.parts.splice(this.parent.parent.parts.indexOf(this.parent), 1);
-		}
-		this.addPart(this.closeUI, false);
-	}
-
-	getRule() {
-		return new Rule((this.rootMotionUI.value - 11) * -1, this.startingQualityUI.value, this.endingQualityUI.value);
-	}
-
-	resetRule() {
-		this.rootMotionUI.value = 11;
-		this.startingQualityUI.value = 0;
-		this.endingQualityUI.value = 0;
-	}
-}
-
-class RuleBoxBox extends UIElement {
-	constructor(name, x, y, w, h, parent) {
-		super(name, x, y, w, h, parent);
-
-		this.ruleBoxes = [];
-
-		this.mask = new UIMaskBox(this.name + "_RuleMask", this.x + 10, this.y + 10, this.w - 20, this.h - 20, this);
-		this.addPart(this.mask);
-
-		for (var i = 0; i < 8; i++) {
-			var newRule = new RuleBox("Rule " + i, 10, 10 + i * 70, 0, 0, this)
-			this.mask.addPart(newRule);
-			this.ruleBoxes.push(newRule);
-		}
-
-		var genButton = new UIButton("Generate", 0, 0, 10, 10, this);
-		genButton.activate = function() {
-			this.parent.setRules();
-			console.table(generator.generateProgressionOfLength(8, true, new Chord()));
-		}
-		this.addPart(genButton);
-		
-	}
-
-	setRules() {
-		var newRules = []
-		for (var i = 0; i < this.ruleBoxes.length; i++) {
-			newRules.push(this.ruleBoxes[i].getRule());
-		}
-
-		generator.setRules(newRules);
-	}
-}
-
-class ChordDisplay extends UIElement {
-	constructor(name, x, y, w, h, parent) {
-		super(name, x, y, 100, 30, parent);
-
-		this.lable = new UITextLabel("Chord Name", 50, 20, 0, 0, this);
-		this.lable.label = "C Major";
-		this.lable.textAlignment = "center";
-		this.addPart(this.lable);
-
-	}
-
-	setChord(chord) {
-		this.lable.label = NoteNumber[chord.root] + " " + QualityDecode[chord.quality];
-	}
-}
-
-class ChordBox extends UIElement {
-	constructor(name, x, y, w, h, parent) {
-		super(name, x, y, 325, 60, parent);
-
-		this.labels = [
-			new UITextLabel("RootM Label", 20, 25, 0, 0, this),
-			new UITextLabel("Quality Label", 105, 25, 0, 0, this),
-		]
-		this.labels[0].label = "Root";
-		this.labels[1].label = "Quality";
-		this.addPart(this.labels[0]);
-		this.addPart(this.labels[1]);
-
-		this.rootUI = new UIDropdown("RootMotion Dropdown", 20, 30, 75, 20, this);
-		this.rootUI.list = ["C", "B", "A#", "A", "G#", "G", "F#", "F", "E", "D#", "D", "C#", "C"];
-		this.rootUI.value = 12;
-		this.rootUI.center = true;
-		this.rootUI.updateListElement();
-		this.addPart(this.rootUI);
-
-		this.qualityUI = new UIDropdown("Quality Dropdown", 105, 30, 95, 20, this);
-		this.qualityUI.list = ["Major", "Minor", "Diminished", "Augmented"];
-		this.qualityUI.updateListElement();
-		this.addPart(this.qualityUI);
-
-		this.closeUI = new UICloseButton("Close RuleBox", 310, 0, 15, 15, this)
-		this.closeUI.activate = function() {
-			this.parent.parent.active.splice(this.parent.parent.active.indexOf(this.parent), 1);
-			this.parent.parent.parts.splice(this.parent.parent.parts.indexOf(this.parent), 1);
-		}
-		this.addPart(this.closeUI, false);
-	}
-
-	getChord() {
-		return new Chord(12 - this.rootUI.value, this.qualityUI.value);
-	}
-
-	resetChord() {
-		this.rootUI.value = 0;
-		this.qualityUI.value = 0;
-	}
-}
-
-class ChordDisplayBox extends UIElement {
-	constructor(name, x, y, w, h, parent) {
-		super(name, x, y, w, h, parent);
-
-		this.chords = [];
-		this.spacing = 60;
-
-		this.genButton = new UIButton("Generate", 0, 0, 10, 10, this);
-		this.genButton.activate = function() {
-			this.parent.listChords();
-		}
-		this.addPart(this.genButton);
-	}
-
-	listChords() {
-		this.parts = [];
-		this.active = [];
-		this.chords = generator.generateProgressionOfLength(8, true, new Chord());
-
-		for (var i = 0; i < this.chords.length; i++) {
-			var newChord = new ChordDisplay("Chord", 20, 20 + this.spacing * i, 80, 40, this);
-			newChord.setChord(this.chords[i]);
-			this.addPart(newChord);
-		}
-		this.addPart(this.genButton);
-	}
-
 }
