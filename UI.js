@@ -128,7 +128,7 @@ class UIMainInterface extends UIElement {
 		if (mouseJustPressed /*&& isInElement(this, mouseX, mouseY)*/) {
 			this.leftMouseClick(mouseX, mouseY);
 		}
-	}
+	}k
 
 	onDraw() {}
 	addToParent() {}
@@ -144,6 +144,7 @@ class UIMaskBox extends UIElement {
 
 		this.xoffset = 0;
 		this.yoffset = 0;
+		this.offsetChanged = false;
 
 		this.canvas = document.createElement("Canvas");
 		this.canvasContext = this.canvas.getContext("2d");
@@ -160,16 +161,19 @@ class UIMaskBox extends UIElement {
 
 		colorRect(0, 0, canvas.width, canvas.height, 'lightblue');
 
-		this.x += this.xoffset;
-		this.y += this.yoffset;
-
-		for (var i = 0; i < this.active.length; i++) {
-			this.active[i].updatePosition();
-			this.active[i].draw();
+		if (this.offsetChanged) {
+			this.x += this.xoffset;
+			this.y += this.yoffset;
+			for (var i = 0; i < this.active.length; i++) {
+				this.active[i].updatePosition();
+			}
+			this.x -= this.xoffset;
+			this.y -= this.yoffset;
 		}
 
-		this.x -= this.xoffset;
-		this.y -= this.yoffset;
+		for (var i = 0; i < this.active.length; i++) {
+			this.active[i].draw();
+		}
 
 		canvas = stowCanvas;
 		canvasContext = stowContext;
@@ -187,6 +191,35 @@ class UIMaskBox extends UIElement {
 			this.x + borderSize, this.y + borderSize,
 			this.w - borderBack, this.h - borderBack
 		);
+
+		colorLine(this.xbound, this.ybound, this.xbound, this.ybound + this.wbound, 5, "red");
+		colorLine(this.xbound, this.ybound, this.xbound + this.hbound, this.ybound, 5, "red");
+	}
+
+	setOffset(x, y) {
+		this.xoffset = x;
+		this.yoffset = y;
+		this.offsetChanged = true;
+	}
+
+	setOffsetX(x) {
+		this.setOffset(x, this.yoffset);
+	}
+
+	setOffsetY(y) {
+		this.setOffset(this.xoffset, y);
+	}
+
+	addOffset(x, y) {
+		this.setOffset(this.xoffset + x, this.yoffset + y);
+	}
+
+	addOffsetX(x) {
+		this.addOffset(x, 0);
+	}
+
+	addOffsetY(y) {
+		this.addOffset(0, y);
 	}
 }
 
@@ -221,13 +254,15 @@ class UIButtonWToolTip extends UIButton {
 		super(name, x, y, w, h, parent);
 
 		this.toolTip = toolTip;
+		this.textAlignment = "start";
 	}
 
 	onDraw() {
 		super.onDraw();
 
 		if (this.toolTip != "" && isInElement(this, mouseX, mouseY)) {
-			colorTextOutline(this.toolTip, mouseX + 14, mouseY + 11, "black", "white");
+			colorText(this.toolTip, mouseX, mouseY, "white", "14px Arial", this.textAlignment);
+			colorText(this.toolTip, mouseX, mouseY, "black", "14px Arial", this.textAlignment);
 		}
 	}
 }

@@ -106,12 +106,13 @@ class RuleBox extends UIElement {
 		this.endingQualityUI.updateListElement();
 		this.addPart(this.endingQualityUI);
 
-		this.closeUI = new UICloseButton("Close RuleBox", 310, 0, 15, 15, this)
-		this.closeUI.activate = function() {
-			this.parent.parent.active.splice(this.parent.parent.active.indexOf(this.parent), 1);
-			this.parent.parent.parts.splice(this.parent.parent.parts.indexOf(this.parent), 1);
+		this.closeUI = new UIButtonWToolTip("Close RuleBox", 315, 0, 10, 10, this)
+		this.closeUI.toolTip = "Remove rule";
+		this.closeUI.textAlignment = "end";
+		this.closeUI.onClick = function() {
+			this.parent.parent.removeRule(this.parent);
 		}
-		this.addPart(this.closeUI, false);
+		this.addPart(this.closeUI);
 	}
 
 	getRule() {
@@ -131,19 +132,32 @@ class RuleBoxBox extends UIMaskBox {
 
 		this.ruleBoxes = [];
 
-		for (var i = 0; i < 8; i++) {
-			var newRule = new RuleBox("Rule " + i, 10, 10 + i * 70, 0, 0, this)
-			this.addPart(newRule);
-			this.ruleBoxes.push(newRule);
+		for (var i = 0; i < 4; i++) {
+			this.addRule();
 		}
 
-		var genButton = new UIButton("Generate", 0, 0, 10, 10, this);
-		genButton.activate = function() {
+		var genButton = new UIButtonWToolTip("Generate", 0, 0, 10, 10, this);
+		genButton.toolTip = "Generate sequence";
+		genButton.onClick = function() {
 			this.parent.setRules();
-			console.table(generator.generateProgressionOfLength(8, true, new Chord()));
 		}
 		this.addPart(genButton);
-		
+
+		var addButton = new UIButtonWToolTip("Add Rule", this.x+this.w - 10, 0, 10, 10, this);
+		addButton.toolTip = "Add rule";
+		addButton.textAlignment = "end";
+		addButton.onClick = function() {
+			this.parent.addRule();
+		}
+		this.addPart(addButton);
+
+		var rmButton = new UIButtonWToolTip("Remove Rule", this.x+this.w - 10, 10, 10, 10, this);
+		rmButton.toolTip = "Remove rule";
+		rmButton.textAlignment = "end";
+		rmButton.onClick = function() {
+			this.parent.removeRule();
+		}
+		this.addPart(rmButton);		
 	}
 
 	setRules() {
@@ -153,6 +167,36 @@ class RuleBoxBox extends UIMaskBox {
 		}
 
 		generator.setRules(newRules);
+	}
+
+	addRule() {
+		var newRule = new RuleBox("New Rule", 10, 10 + 70, 0, 0, this)
+		this.addPart(newRule);
+		this.ruleBoxes.push(newRule);
+
+		this.placeRules();
+	}
+
+	removeRule(rule = null) {
+		if (rule == null) {
+			rule = this.ruleBoxes[this.ruleBoxes.length-1];
+		}
+
+		this.removePart(rule);
+		var ruleIndex = this.ruleBoxes.indexOf(rule);
+		if (ruleIndex < 0) return;
+
+		this.ruleBoxes[ruleIndex].setActive(false);
+		this.ruleBoxes.splice(ruleIndex, 1);
+
+		this.placeRules();
+	}
+
+	placeRules() {
+		for (var i = 0; i < this.ruleBoxes.length; i++) {
+			this.ruleBoxes[i].name = "Rule " + i;
+			this.ruleBoxes[i].updatePosition(10, 10 + i * 70);
+		}
 	}
 }
 
@@ -223,15 +267,15 @@ class ChordDisplayBox extends UIElement {
 		this.spacing = 60;
 
 		this.genButton = new UIButton("Generate", 0, 0, 10, 10, this);
-		this.genButton.activate = function() {
+		this.genButton.onClick = function() {
 			this.parent.listChords();
 		}
 		this.addPart(this.genButton);
 	}
 
 	listChords() {
-		this.parts = [];
-		this.active = [];
+		this.parts.length = 0;
+		this.active.length = 0;
 		this.chords = generator.generateProgressionOfLength(8, true, new Chord());
 
 		for (var i = 0; i < this.chords.length; i++) {
