@@ -351,10 +351,12 @@ class ChordDisplayBox extends UIElement {
 	listChords() {
 		this.parts.length = 0;
 		this.active.length = 0;
-		this.chords = generator.generateProgressionOfLength(4, true, new Chord());
+		this.chords = generator.generateProgressionOfLength(8, true, new Chord());
 
 		for (var i = 0; i < this.chords.length; i++) {
-			var newChord = new ChordDisplay("Chord", 20, 20 + this.spacing * i, 80, 40, this);
+			var x = 6 + (i%4) * 96; //20
+			var y = 16 + this.spacing * Math.floor(i/4); //20 + this.spacing * i
+			var newChord = new ChordDisplay("Chord", x, y, 100, 30, this);
 			newChord.setChord(this.chords[i]);
 			this.addPart(newChord);
 		}

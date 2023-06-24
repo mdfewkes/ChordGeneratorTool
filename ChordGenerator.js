@@ -28,6 +28,13 @@ const QualityChroma = {
 	3: "100010001",
 }
 
+const QualitySoloScale = {
+	0: "101010010100",
+	1: "100101010010",
+	2: "100101001010",
+	3: "101010001010",
+}
+
 const QualitySymbol = {
 	0: "",
 	1: "m",
@@ -168,7 +175,7 @@ var testRules4 = [
 	new Rule(-3, Quality.Major, Quality.Minor),
 	new Rule(-4, Quality.Minor, Quality.Major),
 	new Rule(2, Quality.Major, Quality.Major),
-	new Rule(-5, Quality.Major, Quality.Major),
+	new Rule(5, Quality.Major, Quality.Major),
 ];
 
 //I IV V IV
@@ -194,36 +201,35 @@ var testRules1 = [
 ];
 
 var testRules = [
-	new Rule(7, Quality.Major, Quality.Major),
+	new Rule( 7, Quality.Major, Quality.Major),
 	new Rule(-7, Quality.Major, Quality.Major),
-	new Rule(7, Quality.Minor, Quality.Minor),
+	new Rule( 7, Quality.Minor, Quality.Minor),
 	new Rule(-7, Quality.Minor, Quality.Minor),
 	new Rule(-7, Quality.Major, Quality.Minor),
-	new Rule(2, Quality.Major, Quality.Major),
+	new Rule( 2, Quality.Major, Quality.Major),
 	new Rule(-2, Quality.Major, Quality.Major),
-	new Rule(2, Quality.Minor, Quality.Minor),
+	new Rule( 2, Quality.Minor, Quality.Minor),
 	new Rule(-2, Quality.Minor, Quality.Minor),
-	new Rule(2, Quality.Major, Quality.Minor),
+	new Rule( 2, Quality.Major, Quality.Minor),
 	new Rule(-2, Quality.Minor, Quality.Major),
 	new Rule(-3, Quality.Major, Quality.Minor),
-	new Rule(3, Quality.Minor, Quality.Major),
-	new Rule(4, Quality.Minor, Quality.Minor),
+	new Rule( 3, Quality.Minor, Quality.Major),
+	new Rule( 4, Quality.Minor, Quality.Minor),
 	new Rule(-4, Quality.Minor, Quality.Minor),
-	new Rule(0, Quality.Major, Quality.Minor),
-	new Rule(0, Quality.Minor, Quality.Major),//
-	new Rule(0, Quality.Major, Quality.Augmented),
-	new Rule(0, Quality.Augmented, Quality.Major),//
-	new Rule(0, Quality.Minor, Quality.Diminished),
-	new Rule(0, Quality.Diminished, Quality.Minor),//
-	new Rule(0, Quality.Minor, Quality.Augmented),//
-	new Rule(0, Quality.Augmented, Quality.Minor),//
-	new Rule(0, Quality.Major, Quality.Diminished),
-	new Rule(0, Quality.Diminished, Quality.Major),//
-	new Rule(1, Quality.Diminished, Quality.Major),
-	new Rule(1, Quality.Diminished, Quality.Minor),//
-	new Rule(4, Quality.Major, Quality.Diminished),
-	new Rule(6, Quality.Major, Quality.Diminished),
-	new Rule(5, Quality.Augmented, Quality.Major),
+	new Rule( 0, Quality.Major, Quality.Minor),
+	new Rule( 0, Quality.Minor, Quality.Major),//
+	new Rule( 0, Quality.Major, Quality.Augmented),
+	new Rule( 0, Quality.Augmented, Quality.Major),//
+	new Rule( 0, Quality.Minor, Quality.Diminished),
+	new Rule( 0, Quality.Diminished, Quality.Minor),//
+	new Rule( 0, Quality.Major, Quality.Diminished),
+	new Rule( 0, Quality.Diminished, Quality.Major),//
+	new Rule( 1, Quality.Diminished, Quality.Major),
+	new Rule( 4, Quality.Major, Quality.Diminished),
+	new Rule( 6, Quality.Major, Quality.Diminished),
+	new Rule( 5, Quality.Augmented, Quality.Major),
+	new Rule( 1, Quality.Augmented, Quality.Major),
+	new Rule(-3, Quality.Augmented, Quality.Major),
 ];
 
 function ChordGenerator() {
