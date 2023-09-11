@@ -10,6 +10,9 @@ var mouseJustReleased = false;
 var generator = new ChordGenerator();
 var musicEngine = new musicEngine();
 
+var ruleWindow = null;
+var chordWindow = null;
+
 function calculateMousePos(evt) {
 	var rect = canvas.getBoundingClientRect(),
 	root = document.documentElement;
@@ -32,7 +35,12 @@ function mouseUp(evt) {
 	mouseJustReleased = true;
 }
 
-
+async function startTone() {
+	await Tone.start();
+	Tone.Transport.start();
+	window.removeEventListener('click', startTone);
+	//console.log('audio is ready');
+}
 
 window.onload = function() {
 	canvas = document.getElementById('toolCanvas');
@@ -42,10 +50,12 @@ window.onload = function() {
 	document.getElementById('toolCanvas').addEventListener('pointerdown', mouseDown);
 	document.getElementById('toolCanvas').addEventListener('pointerup', mouseUp);
 
+	window.addEventListener('click', startTone);
+
 	mainInterface = new UIMainInterface("ChordTool", canvas.width, canvas.height);
 
-	mainInterface.addPart(new RuleBoxBox("The Box O Rules", 0, 0, 345, 600), true);
-	mainInterface.addPart(new ChordDisplayBox("Chord Display Box", 400, 0, 400, 600), true);
+	ruleWindow = mainInterface.addPart(new RuleBoxBox("The Box O Rules", 0, 0, 345, 600), true);
+	chordWindow = mainInterface.addPart(new ChordDisplayBox("Chord Display Box", 400, 0, 400, 600), true);
 
 	var testPanel = mainInterface.addPart(new UIElement("testpanel", 100, 100, 600, 300), false);
 	testPanel.addPart(new UIButton("testbutton1", 20, 20, 20, 20));
@@ -113,7 +123,6 @@ class RuleBox extends UIElement {
 	}
 
 	setRule(rule) {
-		console.log(rule);
 		this.rootMotionUI.value = (rule.rootMotion - 11) * -1;
 		this.startingQualityUI.value = rule.startingQuality;
 		this.endingQualityUI.value = rule.endingQuality;
@@ -143,6 +152,7 @@ class RuleBoxBox extends UIElement {
 		genButton.toolTip = "Generate sequence";
 		genButton.onClick = function() {
 			this.parent.sendRulesToGenerator();
+			chordWindow.listChords();
 		}
 
 		var addButton = new UIButtonWToolTip("Add Rule", this.x+this.w - 10, 0, 10, 10);
@@ -175,31 +185,13 @@ class RuleBoxBox extends UIElement {
 		sdButton.textAlignment = "end";
 		sdButton.onClick = function() {
 			this.parent.scrollDown();
-		}	
+		}
+
+		this.setRules(generator.getRules());
 	}
 
 	onUpdate() {
 		this.ruleMask.setLeastActive();
-	}
-
-	sendRulesToGenerator() {
-		generator.setRules(this.getRules());
-	}
-
-	setRules(newRules) {
-		this.clearRules();
-		for (var i = 0; i < newRules.length; i++) {
-			this.addRule(newRules[i]);
-		}
-	}
-
-	getRules() {
-		var newRules = []
-		for (var i = 0; i < this.ruleBoxes.length; i++) {
-			newRules.push(this.ruleBoxes[i].getRule());
-		}
-
-		return newRules;
 	}
 
 	addRule(rule = null) {
@@ -237,6 +229,28 @@ class RuleBoxBox extends UIElement {
 		this.placeRules();
 	}
 
+	setRules(newRules) {
+		this.clearRules();
+		for (var i = 0; i < newRules.length; i++) {
+			this.addRule(newRules[i]);
+		}
+	}
+
+	addRules(newRules) {
+		for (var i = 0; i < newRules.length; i++) {
+			this.addRule(newRules[i]);
+		}
+	}
+
+	getRules() {
+		var newRules = []
+		for (var i = 0; i < this.ruleBoxes.length; i++) {
+			newRules.push(this.ruleBoxes[i].getRule());
+		}
+
+		return newRules;
+	}
+
 	clearRules() {
 		for (var i = this.ruleBoxes.length; i > 0; i--) {
 			this.removeRule();
@@ -248,6 +262,12 @@ class RuleBoxBox extends UIElement {
 			this.ruleBoxes[i].name = "Rule " + i;
 			this.ruleBoxes[i].updatePosition(0, 10 - borderSize + i * 70);
 		}
+
+		this.validateScrollPosition();
+	}
+
+	sendRulesToGenerator() {
+		generator.setRules(this.getRules());
 	}
 
 	scrollUp() {
@@ -318,6 +338,7 @@ class ChordDisplayBox extends UIElement {
 		this.genButton = new UIButton("Generate", 0, 0, 10, 10);
 		this.addPart(this.genButton);
 		this.genButton.onClick = function() {
+			ruleWindow.sendRulesToGenerator();
 			this.parent.listChords();
 		}
 
@@ -325,12 +346,17 @@ class ChordDisplayBox extends UIElement {
 		this.playbackButton.onClick = function() {
 			musicEngine.playProgression(this.parent.chords);
 		}
+
+		this.stopPlaybackButton = new UIButton("Stop Playback", 20, 0, 10, 10);
+		this.stopPlaybackButton.onClick = function() {
+			musicEngine.stopPlayback();
+		}
 	}
 
 	listChords() {
 		this.parts.length = 0;
 		this.active.length = 0;
-		this.chords = generator.generateProgressionOfLength(8, false, new Chord());
+		this.chords = generator.generateProgressionOfLength(8, true, new Chord());
 
 		for (var i = 0; i < this.chords.length; i++) {
 			var x = 6 + (i%4) * 96; //20
@@ -342,6 +368,7 @@ class ChordDisplayBox extends UIElement {
 
 		this.addPart(this.genButton);
 		this.addPart(this.playbackButton);
+		this.addPart(this.stopPlaybackButton);
 	}
 }
 

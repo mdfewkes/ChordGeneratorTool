@@ -105,14 +105,29 @@ const NoteNumberFlats = {
 	11: "B"
 }
 
-var NoteNumber = NoteNumberFlats;
+const NoteNumberCommon = {
+	0: "C",
+	1: "C#",
+	2: "D",
+	3: "Eb",
+	4: "E",
+	5: "F",
+	6: "F#",
+	7: "G",
+	8: "Ab",
+	9: "A",
+	10: "Bb",
+	11: "B"
+}
+
+var NoteNumber = NoteNumberCommon;
 
 function Chord(root = 0, quality = Quality.Major) {
-	this.root = root;
+	this.root = validateRoot(root);
 	this.quality = quality;
 	this.weight = 1;
 
-	validateRoot()
+	validateRoot();
 
 	this.getChroma = function() {
 		var chordChroma = QualityChroma[quality];
@@ -134,8 +149,8 @@ function Chord(root = 0, quality = Quality.Major) {
 		return symbol;
 	}
 
-	function validateRoot() {
-		this.root = (this.root < 0 ? this.root + NoteCount : this.root) % NoteCount;
+	function validateRoot(value) {
+		return (value + NoteCount*NoteCount) % NoteCount;
 	}
 }
 
@@ -249,7 +264,7 @@ function ChordGenerator() {
 	var loopProgression = false;
 	var forgivingOutput = false;
 	var progression = [];
-	var rules = testRules;
+	var rules = testRules4;
 
 	var failsafeRules = []
 	for (var i = 0; i < QualityCount; i++) {
