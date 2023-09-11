@@ -8,6 +8,7 @@ var mouseJustPressed = false;
 var mouseJustReleased = false;
 
 var generator = new ChordGenerator();
+var musicEngine = new musicEngine();
 
 function calculateMousePos(evt) {
 	var rect = canvas.getBoundingClientRect(),
@@ -61,6 +62,7 @@ function nextFrame() {
 	colorRect(0, 0, canvas.width, canvas.height, 'lightcyan');
 	mainInterface.update();
 	mainInterface.draw();
+	musicEngine.update();
 	mouseJustPressed = false;
 	mouseJustReleased = false;
 
@@ -318,6 +320,11 @@ class ChordDisplayBox extends UIElement {
 		this.genButton.onClick = function() {
 			this.parent.listChords();
 		}
+
+		this.playbackButton = new UIButton("Playback", 10, 0, 10, 10);
+		this.playbackButton.onClick = function() {
+			musicEngine.playProgression(this.parent.chords);
+		}
 	}
 
 	listChords() {
@@ -332,7 +339,9 @@ class ChordDisplayBox extends UIElement {
 			newChord.setChord(this.chords[i]);
 			this.addPart(newChord);
 		}
+
 		this.addPart(this.genButton);
+		this.addPart(this.playbackButton);
 	}
 }
 
