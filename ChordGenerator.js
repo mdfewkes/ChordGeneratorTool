@@ -18,7 +18,7 @@ const QualityWeight = {
 	0: 1,
 	1: 1,
 	2: 0.5,
-	3: 0.25,
+	3: 0.1,
 }
 
 const QualityChroma = {
@@ -28,7 +28,14 @@ const QualityChroma = {
 	3: "100010001",
 }
 
-const QualitySoloScale = {
+const QualityScaleChroma = {
+	0: "101011010101",
+	1: "101101011010",
+	2: "110101101010",
+	3: "101010101010",
+}
+
+const QualitySoloScaleChroma = {
 	0: "101010010100",
 	1: "100101010010",
 	2: "100101001010",
@@ -101,36 +108,34 @@ const NoteNumberFlats = {
 var NoteNumber = NoteNumberFlats;
 
 function Chord(root = 0, quality = Quality.Major) {
-	this.root = (root < 0 ? root + NoteCount : root) % NoteCount;
+	this.root = root;
 	this.quality = quality;
 	this.weight = 1;
 
+	validateRoot()
+
 	this.getChroma = function() {
-		this.root = (this.root < 0 ? this.root + NoteCount : this.root) % NoteCount;
+		var chordChroma = QualityChroma[quality];
+		chordChroma = chordChroma.padEnd(NoteCount, "0");
 
-		var chordMask = QualityChroma[quality];
-		chordMask = chordMask.padEnd(NoteCount, "0");
-
-		return chordMask;
+		return chordChroma;
 	}
 
 	this.getChordMask = function() {
-		this.root = (this.root < 0 ? this.root + NoteCount : this.root) % NoteCount;
 		var chordMask = this.getChroma();
 
-		const rotate = chordMask.length - (this.root % chordMask.length);
-		chordMask = chordMask.slice(rotate) + chordMask.slice(0, rotate);
-
-		return chordMask;
+		return rotateString(chordMask, this.root);
 	}
 
 	this.getSymbol = function() {
-		this.root = (this.root < 0 ? this.root + NoteCount : this.root) % NoteCount;
-
 		var symbol = NoteNumber[this.root];
 		symbol += QualitySymbol[quality];
 
 		return symbol;
+	}
+
+	function validateRoot() {
+		this.root = (this.root < 0 ? this.root + NoteCount : this.root) % NoteCount;
 	}
 }
 
@@ -339,10 +344,7 @@ function ChordGenerator() {
 	}
 
 	this.setChroma = function(chroma, root = 0, divergence = 0) {
-		var scaleMask = chroma;
-
-		const rotate = scaleMask.length - (root % scaleMask.length);
-		scaleMask = scaleMask.slice(rotate) + scaleMask.slice(0, rotate);
+		var scaleMask = rotateString(chroma, root);
 
 		this.setScaleMask(scaleMask, divergence);
 	}
@@ -462,23 +464,18 @@ function ChordGenerator() {
 					stack.push(backwardIndex);
 				}
 			}
-
-
-			//console.log(JSON.parse(JSON.stringify(progression)));
-
 		}
 	}
 
 	function renderProgression() {
 		for (var i = 0; i < progression.length; i++) {
-			//progression[i] = progression[i][Math.floor(Math.random() * progression[i].length)];
 			progression[i] = progression[i][getRandomChord(i)];
+			progression[i] = new Chord(progression[i].root, progression[i].quality);
 		}
 	}
 
 	function collaspeAt(index) {
 		//console.log(index);
-		//progression[index] = [progression[index][Math.floor(Math.random() * progression[index].length)]];
 		progression[index] = [progression[index][getRandomChord(index)]];
 	}
 
@@ -544,13 +541,21 @@ function ChordGenerator() {
 
 }
 
-bitwiseAnd = function(s1, s2) {
-		 
-	let length = 0;
+rotateString = function(string, rotationAmount) {
+	if (rotationAmount < 0) {
+		rotationAmount = string.length + rotationAmount;
+	}
 
+	var rotate = string.length - (rotationAmount % string.length);
+	string = string.slice(rotate) + string.slice(0, rotate);
+
+	return string;
+}
+
+bitwiseAnd = function(s1, s2) {
+	let length = 0;
 	let len_a = s1.length;
 	let len_b = s2.length;
-
 	let num_zeros = Math.abs(len_a - len_b);
 
 	if (len_a < len_b) {
@@ -566,19 +571,14 @@ bitwiseAnd = function(s1, s2) {
 		length = len_a;
 	}
  
-
-
- 
-	let res = "";
- 
+	let res = ""; 
 	for(let i = 0 ; i<length; i++) {
-		res = res + String.fromCharCode((s1[i].charCodeAt() -
-										   '0'.charCodeAt() &
-										 s2[i].charCodeAt() -
-										   '0'.charCodeAt()) +
-										   '0'.charCodeAt());
+		res = res + String.fromCharCode(
+			(s1[i].charCodeAt() - '0'.charCodeAt() 
+		  &  s2[i].charCodeAt() - '0'.charCodeAt()) 
+		  +    '0'.charCodeAt()
+		);
 	}
 	
 	return res;
-
 }

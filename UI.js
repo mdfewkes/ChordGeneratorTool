@@ -2,15 +2,14 @@ var borderSize = 3;
 var borderBack = borderSize * 2;
 
 class UIElement {
-	constructor(name, x, y, w, h, parent) {
+	constructor(name, x, y, w, h) {
 		this.name = name;
-		this.parent = parent;
+		this.parent = {x:0, y:0};
 
 		this.parts = [];
 		this.active = [];
 
 		this.updatePosition(x, y, w, h);
-
 	}
 
 	update() {
@@ -54,10 +53,12 @@ class UIElement {
 	}
 
 	addPart(part, isActive = true) {
+		part.parent = this;
+		part.updatePosition();
+
 		this.parts.push(part);
 		if (isActive) this.active.push(part);
 		return part;
-
 	}
 
 	removePart(part) {
@@ -66,14 +67,6 @@ class UIElement {
 
 		this.parts[partIndex].setActive(false);
 		this.parts.splice(partIndex, 1);
-	}
-
-	addToParent() {
-		this.parent.addPart(this);
-	}
-
-	removeFromParent() {
-		this.parent.removePart(this);
 	}
 
 	setMostActive() {
@@ -133,7 +126,7 @@ function isInElement(uiElement, x, y) {
 
 class UIMainInterface extends UIElement {
 	constructor(name, screenWidth, screenHeight) {
-		super(name, 0, 0, screenWidth, screenHeight, {x:0, y:0});
+		super(name, 0, 0, screenWidth, screenHeight);
 	}
 
 	onUpdate() {
@@ -143,16 +136,14 @@ class UIMainInterface extends UIElement {
 	}
 
 	onDraw() {}
-	addToParent() {}
-	removeFromParent() {}
 	setMostActive() {}
 	setActive(isActive) {}
 	isActive() { return true; }
 }
 
 class UIMaskBox extends UIElement {
-	constructor(name, x, y, w, h, parent) {
-		super(name, x, y, w, h, parent);
+	constructor(name, x, y, w, h) {
+		super(name, x, y, w, h);
 
 		this.xoffset = 0;
 		this.yoffset = 0;
@@ -241,8 +232,8 @@ class UIMaskBox extends UIElement {
 }
 
 class UIButton extends UIElement {
-	constructor(name, x, y, w, h, parent) {
-		super(name, x, y, w, h, parent);
+	constructor(name, x, y, w, h) {
+		super(name, x, y, w, h);
 	}
 
 	onLeftMouseClick() {
@@ -266,8 +257,8 @@ class UIButton extends UIElement {
 }
 
 class UIButtonWToolTip extends UIButton {
-	constructor(name, x, y, w, h, parent) {
-		super(name, x, y, w, h, parent);
+	constructor(name, x, y, w, h) {
+		super(name, x, y, w, h);
 
 		this.toolTip = "";
 		this.textAlignment = "start";
@@ -285,11 +276,10 @@ class UIButtonWToolTip extends UIButton {
 	}
 }
 
-class UIToggleWToolTip extends UIButtonWToolTip {
-	constructor(name, x, y, w, h, parent) {
-		super(name, x, y, w, h, parent);
+class UIToggle extends UIElement {
+	constructor(name, x, y, w, h) {
+		super(name, x, y, w, h);
 
-		this.toolTip = "";
 		this.toggle = false;
 	}
 
@@ -317,6 +307,26 @@ class UIToggleWToolTip extends UIButtonWToolTip {
 	}
 }
 
+class UIToggleWToolTip extends UIElement {
+	constructor(name, x, y, w, h) {
+		super(name, x, y, w, h);
+
+		this.toolTip = "";
+		this.textAlignment = "start";
+	}
+
+	onDraw() {
+		super.onDraw();
+
+		if (this.toolTip != "" && isInElement(this, mouseX, mouseY)) {
+			colorText(this.toolTip, mouseX+1, mouseY+1, "white", "14px Arial", this.textAlignment);
+			colorText(this.toolTip, mouseX-1, mouseY+1, "white", "14px Arial", this.textAlignment);
+			colorText(this.toolTip, mouseX, mouseY-1, "white", "14px Arial", this.textAlignment);
+			colorText(this.toolTip, mouseX, mouseY, "black", "14px Arial", this.textAlignment);
+		}
+	}
+}
+
 class UICloseButton extends UIButton {
 	onDraw() {
 		super.onDraw();
@@ -331,8 +341,8 @@ class UICloseButton extends UIButton {
 }
 
 class UIMoveBar extends UIElement {
-	constructor(name, x, y, w, h, parent) {
-		super(name, x, y, w, h, parent);
+	constructor(name, x, y, w, h) {
+		super(name, x, y, w, h);
 
 		this.grabbed = false;
 		this.grabbedX = -1;
@@ -357,6 +367,7 @@ class UIMoveBar extends UIElement {
 		if (this.grabbed) {
 			var newX = this.parentX + mouseX - this.grabbedX;
 			var newY = this.parentY + mouseY - this.grabbedY;
+
 			this.parent.updatePosition(newX, newY);
 		}
 	}
@@ -368,8 +379,8 @@ class UIMoveBar extends UIElement {
 }
 
 class UITextLabel extends UIElement {
-	constructor(name, x, y, w, h, parent) {
-		super(name, x, y, w, h, parent);
+	constructor(name, x, y, w, h) {
+		super(name, x, y, w, h);
 
 		this.size = 14;
 		this.textAlignment = "left";
@@ -382,8 +393,8 @@ class UITextLabel extends UIElement {
 }
 
 class UIDropdown extends UIElement {
-	constructor(name, x, y, w, h, parent) {
-		super(name, x, y, w, h, parent);
+	constructor(name, x, y, w, h) {
+		super(name, x, y, w, h);
 
 		this.value = 0;
 		this.list = [];
@@ -438,8 +449,8 @@ class UIDropdown extends UIElement {
 }
 
 class UIDropdownList extends UIElement {
-	constructor(name, x, y, w, h, parent) {
-		super(name, x, y, w, h, parent);
+	constructor(name, x, y, w, h) {
+		super(name, x, y, w, h);
 
 		this.justOpened = false;
 	}

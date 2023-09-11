@@ -43,20 +43,14 @@ window.onload = function() {
 
 	mainInterface = new UIMainInterface("ChordTool", canvas.width, canvas.height);
 
-	var newParts = [
-		new UIElement("testpanel", 100, 100, 600, 300, mainInterface),
-		new RuleBoxBox("The Box O Rules", 0, 0, 345, 600, mainInterface),
-		new ChordDisplayBox("Chord Display Box", 400, 0, 400, 600, mainInterface),
-	]
-	var activeParts = [
-		newParts[1],
-		newParts[2],
-	]
-	mainInterface.active = activeParts;
+	mainInterface.addPart(new RuleBoxBox("The Box O Rules", 0, 0, 345, 600), true);
+	mainInterface.addPart(new ChordDisplayBox("Chord Display Box", 400, 0, 400, 600), true);
 
-	newParts[0].addPart(new UIButton("testbutton1", 20, 20, 20, 20, newParts[0]));
-	newParts[0].addPart(new ChordBox("testchordbox", 40, 60, 20, 20, newParts[0]));
-	newParts[0].addPart(new ChordDisplay("testchorddisplay", 60, 20, 200, 20, newParts[0]));
+	var testPanel = mainInterface.addPart(new UIElement("testpanel", 100, 100, 600, 300), false);
+	testPanel.addPart(new UIButton("testbutton1", 20, 20, 20, 20));
+	testPanel.addPart(new ChordDisplay("testchorddisplay", 60, 20, 200, 20));
+	testPanel.addPart(new ChordBox("testchordbox", 20, 60, 20, 20));
+	testPanel.addPart(new RuleBox("testruledisplay", 260, 60, 200, 20));
 
 	nextFrame();
 }
@@ -251,16 +245,35 @@ class RuleBoxBox extends UIElement {
 	}
 
 	scrollUp() {
-		this.ruleMask.addOffsetY(-40);
-
-		// TODO: max scroll up
+		this.ruleMask.addOffsetY(40);
+		this.validateScrollPosition();
 	}
 
 
 	scrollDown() {
-		this.ruleMask.addOffsetY(40);
+		this.ruleMask.addOffsetY(-40);
+		this.validateScrollPosition();
+	}
 
-		if (this.ruleMask.yoffset > 0) this.ruleMask.setOffsetY(0);
+	validateScrollPosition() {
+		var maxOffset = this.ruleBoxes.length * -70 + this.ruleMask.h;
+		// Not enough content to scroll
+		if (maxOffset >= 0) {
+			this.ruleMask.setOffsetY(0);
+			return;
+		}
+
+		// Reached top
+		if (this.ruleMask.yoffset > 0) {
+			this.ruleMask.setOffsetY(0);
+			return;
+		}
+
+		// Reached Bottom
+		if (this.ruleMask.yoffset < maxOffset) {
+			this.ruleMask.setOffsetY(maxOffset);
+			return;
+		}
 	}
 }
 
