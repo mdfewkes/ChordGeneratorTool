@@ -13,11 +13,11 @@ class UIElement {
 	}
 
 	update() {
-		this.onUpdate();
-
 		for (var i = this.active.length-1; i >= 0; i--) {
 			this.active[i].update();
 		}
+		
+		this.onUpdate();
 	}
 
 	onUpdate() {
@@ -58,6 +58,7 @@ class UIElement {
 
 		this.parts.push(part);
 		if (isActive) this.active.push(part);
+
 		return part;
 	}
 
@@ -75,7 +76,8 @@ class UIElement {
 			return;
 		}
 
-		this.parent.active.push(this.parent.active.splice(this.parent.active.indexOf(this), 1)[0]);
+		this.parent.active.splice(this.parent.active.indexOf(this), 1);
+		this.parent.active.push(this);
 	}
 
 	setLeastActive() {
@@ -256,6 +258,19 @@ class UIButton extends UIElement {
 	}
 }
 
+class UICloseButton extends UIButton {
+	onDraw() {
+		super.onDraw();
+
+		colorLine(this.x, this.y, this.x + this.w, this.y + this.h, 3, 'blue');
+		colorLine(this.x, this.y + this.h, this.x + this.w, this.y, 3, 'blue');
+	}
+
+	onClick() {
+		this.parent.setActive(false);
+	}
+}
+
 class UIButtonWToolTip extends UIButton {
 	constructor(name, x, y, w, h) {
 		super(name, x, y, w, h);
@@ -270,8 +285,8 @@ class UIButtonWToolTip extends UIButton {
 		if (this.toolTip != "" && isInElement(this, mouseX, mouseY)) {
 			colorText(this.toolTip, mouseX+1, mouseY+1, "white", "14px Arial", this.textAlignment);
 			colorText(this.toolTip, mouseX-1, mouseY+1, "white", "14px Arial", this.textAlignment);
-			colorText(this.toolTip, mouseX, mouseY-1, "white", "14px Arial", this.textAlignment);
-			colorText(this.toolTip, mouseX, mouseY, "black", "14px Arial", this.textAlignment);
+			colorText(this.toolTip, mouseX,   mouseY-1, "white", "14px Arial", this.textAlignment);
+			colorText(this.toolTip, mouseX,   mouseY,   "black", "14px Arial", this.textAlignment);
 		}
 	}
 }
@@ -324,19 +339,6 @@ class UIToggleWToolTip extends UIElement {
 			colorText(this.toolTip, mouseX, mouseY-1, "white", "14px Arial", this.textAlignment);
 			colorText(this.toolTip, mouseX, mouseY, "black", "14px Arial", this.textAlignment);
 		}
-	}
-}
-
-class UICloseButton extends UIButton {
-	onDraw() {
-		super.onDraw();
-
-		colorLine(this.x, this.y, this.x + this.w, this.y + this.h, 3, 'blue');
-		colorLine(this.x, this.y + this.h, this.x + this.w, this.y, 3, 'blue');
-	}
-
-	onClick() {
-		this.parent.setActive(false);
 	}
 }
 
@@ -459,6 +461,8 @@ class UIDropdownList extends UIElement {
 		if (mouseJustPressed && !this.justOpened) {
 			if (isInElement(this, mouseX, mouseY)) {
 				this.parent.value = this.quantizeMousePositionY();
+				mouseJustPressed = false;
+				mouseJustReleased = true;
 			}
 			this.parent.closeList();
 			return;

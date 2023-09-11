@@ -46,7 +46,7 @@ window.onload = function() {
 	mainInterface.addPart(new RuleBoxBox("The Box O Rules", 0, 0, 345, 600), true);
 	mainInterface.addPart(new ChordDisplayBox("Chord Display Box", 400, 0, 400, 600), true);
 
-	var testPanel = mainInterface.addPart(new UIElement("testpanel", 100, 100, 600, 300), false);
+	var testPanel = mainInterface.addPart(new UIElement("testpanel", 100, 100, 600, 300), true);
 	testPanel.addPart(new UIButton("testbutton1", 20, 20, 20, 20));
 	testPanel.addPart(new ChordDisplay("testchorddisplay", 60, 20, 200, 20));
 	testPanel.addPart(new ChordBox("testchordbox", 20, 60, 20, 20));
@@ -68,48 +68,40 @@ function nextFrame() {
 
 
 class RuleBox extends UIElement {
-	constructor(name, x, y, w, h, parent) {
-		super(name, x, y, 325, 60, parent);
+	constructor(name, x, y, w, h) {
+		super(name, x, y, 325, 60);
 
 		this.labels = [
-			new UITextLabel("RootMotion Label", 57.5, 25, 0, 0, this),
-			new UITextLabel("StartingQuality Label", 152.5, 25, 0, 0, this),
-			new UITextLabel("EndingingQuality Label", 257.5, 25, 0, 0, this)
+			new UITextLabel("RootMotion Label", 57.5, 25, 0, 0),
+			new UITextLabel("StartingQuality Label", 152.5, 25, 0, 0),
+			new UITextLabel("EndingingQuality Label", 257.5, 25, 0, 0)
 		]
+		this.addPart(this.labels[0]);
+		this.addPart(this.labels[1]);
+		this.addPart(this.labels[2]);
 		this.labels[0].label = "Root Motion";
 		this.labels[0].textAlignment = "center";
 		this.labels[1].label = "Starting Quality";
 		this.labels[1].textAlignment = "center";
 		this.labels[2].label = "Ending Quality";
 		this.labels[2].textAlignment = "center";
-		this.addPart(this.labels[0]);
-		this.addPart(this.labels[1]);
-		this.addPart(this.labels[2]);
 
-		this.rootMotionUI = new UIDropdown("RootMotion Dropdown", 20, 30, 75, 20, this);
+		this.rootMotionUI = new UIDropdown("RootMotion Dropdown", 20, 30, 75, 20);
+		this.addPart(this.rootMotionUI);
 		this.rootMotionUI.list = ["+11", "+10", "+9", "+8", "+7", "+6", "+5", "+4", "+3", "+2", "+1", "0", "-1", "-2", "-3", "-4", "-5", "-6", "-7", "-8", "-9", "-10", "-11"];
 		this.rootMotionUI.value = 11;
 		this.rootMotionUI.center = true;
 		this.rootMotionUI.updateListElement();
-		this.addPart(this.rootMotionUI);
 
-		this.startingQualityUI = new UIDropdown("StartingQuality Dropdown", 105, 30, 95, 20, this);
+		this.startingQualityUI = new UIDropdown("StartingQuality Dropdown", 105, 30, 95, 20);
+		this.addPart(this.startingQualityUI);
 		this.startingQualityUI.list = ["Major", "Minor", "Diminished", "Augmented"];
 		this.startingQualityUI.updateListElement();
-		this.addPart(this.startingQualityUI);
 
-		this.endingQualityUI = new UIDropdown("EndingingQuality Dropdown", 210, 30, 95, 20, this);
+		this.endingQualityUI = new UIDropdown("EndingingQuality Dropdown", 210, 30, 95, 20);
+		this.addPart(this.endingQualityUI);
 		this.endingQualityUI.list = ["Major", "Minor", "Diminished", "Augmented"];
 		this.endingQualityUI.updateListElement();
-		this.addPart(this.endingQualityUI);
-
-		this.closeUI = new UIButtonWToolTip("Close RuleBox", 315, 0, 10, 10, this)
-		this.closeUI.toolTip = "Remove rule";
-		this.closeUI.textAlignment = "end";
-		this.closeUI.onClick = function() {
-			this.parent.parent.removeRule(this.parent);
-		}
-		this.addPart(this.closeUI);
 	}
 
 	getRule() {
@@ -131,10 +123,10 @@ class RuleBox extends UIElement {
 }
 
 class RuleBoxBox extends UIElement {
-	constructor(name, x, y, w, h, parent) {
-		super(name, x, y, w, h, parent);
+	constructor(name, x, y, w, h) {
+		super(name, x, y, w, h);
 
-		this.ruleMask = new UIMaskBox("Rule Mask", x + 10, y + borderSize, w - 20, h - borderBack, this);
+		this.ruleMask = new UIMaskBox("Rule Mask", x + 10, y + borderSize, w - 20, h - borderBack);
 		this.addPart(this.ruleMask);
 
 		this.ruleBoxes = [];
@@ -142,44 +134,44 @@ class RuleBoxBox extends UIElement {
 			this.addRule();
 		}
 
-		var genButton = new UIButtonWToolTip("Generate", 0, 0, 10, 10, this);
+		var genButton = new UIButtonWToolTip("Generate", 0, 0, 10, 10);
+		this.addPart(genButton);
 		genButton.toolTip = "Generate sequence";
 		genButton.onClick = function() {
 			this.parent.sendRulesToGenerator();
 		}
-		this.addPart(genButton);
 
-		var addButton = new UIButtonWToolTip("Add Rule", this.x+this.w - 10, 0, 10, 10, this);
+		var addButton = new UIButtonWToolTip("Add Rule", this.x+this.w - 10, 0, 10, 10);
+		this.addPart(addButton);
 		addButton.toolTip = "Add rule";
 		addButton.textAlignment = "end";
 		addButton.onClick = function() {
 			this.parent.addRule();
 		}
-		this.addPart(addButton);
 
-		var rmButton = new UIButtonWToolTip("Remove Rule", this.x+this.w - 10, 10, 10, 10, this);
+		var rmButton = new UIButtonWToolTip("Remove Rule", this.x+this.w - 10, 10, 10, 10);
+		this.addPart(rmButton);
 		rmButton.toolTip = "Remove rule";
 		rmButton.textAlignment = "end";
 		rmButton.onClick = function() {
 			this.parent.removeRule();
 		}
-		this.addPart(rmButton);	
 
-		var suButton = new UIButtonWToolTip("Scroll up", this.x+this.w - 10, this.y+this.h - 20, 10, 10, this);
+		var suButton = new UIButtonWToolTip("Scroll up", this.x+this.w - 10, this.y+this.h - 20, 10, 10);
+		this.addPart(suButton);	
 		suButton.toolTip = "Scroll up";
 		suButton.textAlignment = "end";
 		suButton.onClick = function() {
 			this.parent.scrollUp();
 		}
-		this.addPart(suButton);	
 
-		var sdButton = new UIButtonWToolTip("Scroll down", this.x+this.w - 10, this.y+this.h - 10, 10, 10, this);
+		var sdButton = new UIButtonWToolTip("Scroll down", this.x+this.w - 10, this.y+this.h - 10, 10, 10);
+		this.addPart(sdButton);	
 		sdButton.toolTip = "Scroll down";
 		sdButton.textAlignment = "end";
 		sdButton.onClick = function() {
 			this.parent.scrollDown();
-		}
-		this.addPart(sdButton);		
+		}	
 	}
 
 	onUpdate() {
@@ -207,8 +199,18 @@ class RuleBoxBox extends UIElement {
 	}
 
 	addRule(rule = null) {
-		var newRule = new RuleBox("New Rule", 0, 0, 0, 0, this.ruleMask);
+		var newRule = new RuleBox("New Rule", 0, 0, 0, 0);
 		if (rule != null) newRule.setRule(rule);
+
+		var closeUI = new UIButtonWToolTip("Close RuleBox", 315, 0, 10, 10);
+		newRule.addPart(closeUI);
+		closeUI.toolTip = "Remove rule";
+		closeUI.textAlignment = "end";
+		closeUI.ruleBox = newRule;
+		closeUI.ruleBoxBox = this;
+		closeUI.onClick = function() {
+			this.ruleBoxBox.removeRule(this.ruleBox);
+		}
 
 		this.ruleMask.addPart(newRule);
 		this.ruleBoxes.push(newRule);
@@ -257,6 +259,7 @@ class RuleBoxBox extends UIElement {
 
 	validateScrollPosition() {
 		var maxOffset = this.ruleBoxes.length * -70 + this.ruleMask.h;
+
 		// Not enough content to scroll
 		if (maxOffset >= 0) {
 			this.ruleMask.setOffsetY(0);
@@ -278,15 +281,15 @@ class RuleBoxBox extends UIElement {
 }
 
 class ChordDisplay extends UIElement {
-	constructor(name, x, y, w, h, parent) {
-		super(name, x, y, 100, 30, parent);
+	constructor(name, x, y, w, h) {
+		super(name, x, y, 100, 30);
 
 		this.chord = new Chord();
 
 		this.lable = new UITextLabel("Chord Name", 50, 20, 0, 0, this);
+		this.addPart(this.lable);
 		this.lable.label = NoteNumber[this.chord.root] + " " + QualityDecode[this.chord.quality];
 		this.lable.textAlignment = "center";
-		this.addPart(this.lable);
 	}
 
 	getChord() {
@@ -302,39 +305,31 @@ class ChordDisplay extends UIElement {
 const rootUIListSharps = ["C", "B", "A#", "A", "G#", "G", "F#", "F", "E", "D#", "D", "C#", "C"];
 const rootUIListFlats =  ["C", "B", "Bb", "A", "Ab", "G", "Gb", "F", "E", "Eb", "D", "Db", "C"];
 class ChordBox extends UIElement {
-	constructor(name, x, y, w, h, parent) {
-		super(name, x, y, 220, 60, parent);
+	constructor(name, x, y, w, h) {
+		super(name, x, y, 220, 60);
 
 		this.labels = [
-			new UITextLabel("RootM Label", 57.5, 25, 0, 0, this),
-			new UITextLabel("Quality Label", 152.5, 25, 0, 0, this),
+			new UITextLabel("RootM Label", 57.5, 25, 0, 0),
+			new UITextLabel("Quality Label", 152.5, 25, 0, 0)
 		]
+		this.addPart(this.labels[0]);
+		this.addPart(this.labels[1]);
 		this.labels[0].label = "Root";
 		this.labels[0].textAlignment = "center";
 		this.labels[1].label = "Quality";
 		this.labels[1].textAlignment = "center";
-		this.addPart(this.labels[0]);
-		this.addPart(this.labels[1]);
 
-		this.rootUI = new UIDropdown("RootMotion Dropdown", 20, 30, 75, 20, this);
+		this.rootUI = new UIDropdown("RootMotion Dropdown", 20, 30, 75, 20);
+		this.addPart(this.rootUI);
 		this.rootUI.list = rootUIListFlats;
 		this.rootUI.value = 12;
 		this.rootUI.center = true;
 		this.rootUI.updateListElement();
-		this.addPart(this.rootUI);
 
-		this.qualityUI = new UIDropdown("Quality Dropdown", 105, 30, 95, 20, this);
+		this.qualityUI = new UIDropdown("Quality Dropdown", 105, 30, 95, 20);
+		this.addPart(this.qualityUI);
 		this.qualityUI.list = ["Major", "Minor", "Diminished", "Augmented"];
 		this.qualityUI.updateListElement();
-		this.addPart(this.qualityUI);
-
-		this.closeUI = new UIButtonWToolTip("Close RuleBox", 210, 0, 10, 10, this)
-		this.closeUI.toolTip = "Remove chord";
-		this.closeUI.textAlignment = "end";
-		this.closeUI.onClick = function() {
-			this.parent.removeFromParent();
-		}
-		this.addPart(this.closeUI, true);
 	}
 
 	getChord() {
@@ -348,17 +343,17 @@ class ChordBox extends UIElement {
 }
 
 class ChordDisplayBox extends UIElement {
-	constructor(name, x, y, w, h, parent) {
-		super(name, x, y, w, h, parent);
+	constructor(name, x, y, w, h) {
+		super(name, x, y, w, h);
 
 		this.chords = [];
 		this.spacing = 40;
 
-		this.genButton = new UIButton("Generate", 0, 0, 10, 10, this);
+		this.genButton = new UIButton("Generate", 0, 0, 10, 10);
+		this.addPart(this.genButton);
 		this.genButton.onClick = function() {
 			this.parent.listChords();
 		}
-		this.addPart(this.genButton);
 	}
 
 	listChords() {
