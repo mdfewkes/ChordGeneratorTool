@@ -1,10 +1,11 @@
-var borderSize = 3;
-var borderBack = borderSize * 2;
+var borderSize = 1;
+var borderBack = 3;//borderSize * 2;
 
 class UIElement {
 	constructor(name, x, y, w, h) {
 		this.name = name;
 		this.parent = {x:0, y:0};
+		this.mi = null;
 
 		this.parts = [];
 		this.active = [];
@@ -16,7 +17,7 @@ class UIElement {
 		for (var i = this.active.length-1; i >= 0; i--) {
 			this.active[i].update();
 		}
-		
+
 		this.onUpdate();
 	}
 
@@ -54,6 +55,7 @@ class UIElement {
 
 	addPart(part, isActive = true) {
 		part.parent = this;
+		part.mi = this.mi;
 		part.updatePosition();
 
 		this.parts.push(part);
@@ -129,6 +131,7 @@ function isInElement(uiElement, x, y) {
 class UIMainInterface extends UIElement {
 	constructor(name, screenWidth, screenHeight) {
 		super(name, 0, 0, screenWidth, screenHeight);
+		this.mi = this;
 	}
 
 	onUpdate() {
@@ -362,7 +365,7 @@ class UIMoveBar extends UIElement {
 	}
 
 	onUpdate() {
-		if (!mouseIsDown || mouseX < 0 || mouseY < 0 || mouseX >= screenWidth || mouseY >= screenHeight) {
+		if (!mouseIsDown || mouseX < 0 || mouseY < 0 || mouseX >= this.mi.w || mouseY >= this.mi.h) {
 			this.grabbed = false;
 		}
 

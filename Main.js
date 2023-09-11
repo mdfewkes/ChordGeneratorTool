@@ -46,11 +46,13 @@ window.onload = function() {
 	mainInterface.addPart(new RuleBoxBox("The Box O Rules", 0, 0, 345, 600), true);
 	mainInterface.addPart(new ChordDisplayBox("Chord Display Box", 400, 0, 400, 600), true);
 
-	var testPanel = mainInterface.addPart(new UIElement("testpanel", 100, 100, 600, 300), true);
+	var testPanel = mainInterface.addPart(new UIElement("testpanel", 100, 100, 600, 300), false);
 	testPanel.addPart(new UIButton("testbutton1", 20, 20, 20, 20));
 	testPanel.addPart(new ChordDisplay("testchorddisplay", 60, 20, 200, 20));
 	testPanel.addPart(new ChordBox("testchordbox", 20, 60, 20, 20));
 	testPanel.addPart(new RuleBox("testruledisplay", 260, 60, 200, 20));
+	testPanel.addPart(new UIMoveBar("testmovebar", 0, 0, 600, 10));
+	testPanel.addPart(new UICloseButton("testclose", 580, 0, 20, 20));
 
 	nextFrame();
 }
@@ -300,6 +302,38 @@ class ChordDisplay extends UIElement {
 		this.lable.label = NoteNumber[chord.root] + " " + QualityDecode[chord.quality];
 		this.chord = chord;
 	}
+
+	leftMouseClick() {}
+}
+
+class ChordDisplayBox extends UIElement {
+	constructor(name, x, y, w, h) {
+		super(name, x, y, w, h);
+
+		this.chords = [];
+		this.spacing = 40;
+
+		this.genButton = new UIButton("Generate", 0, 0, 10, 10);
+		this.addPart(this.genButton);
+		this.genButton.onClick = function() {
+			this.parent.listChords();
+		}
+	}
+
+	listChords() {
+		this.parts.length = 0;
+		this.active.length = 0;
+		this.chords = generator.generateProgressionOfLength(8, false, new Chord());
+
+		for (var i = 0; i < this.chords.length; i++) {
+			var x = 6 + (i%4) * 96; //20
+			var y = 16 + this.spacing * Math.floor(i/4); //20 + this.spacing * i
+			var newChord = new ChordDisplay("Chord", x, y, 100, 30, this);
+			newChord.setChord(this.chords[i]);
+			this.addPart(newChord);
+		}
+		this.addPart(this.genButton);
+	}
 }
 
 const rootUIListSharps = ["C", "B", "A#", "A", "G#", "G", "F#", "F", "E", "D#", "D", "C#", "C"];
@@ -339,35 +373,5 @@ class ChordBox extends UIElement {
 	resetChord() {
 		this.rootUI.value = 0;
 		this.qualityUI.value = 0;
-	}
-}
-
-class ChordDisplayBox extends UIElement {
-	constructor(name, x, y, w, h) {
-		super(name, x, y, w, h);
-
-		this.chords = [];
-		this.spacing = 40;
-
-		this.genButton = new UIButton("Generate", 0, 0, 10, 10);
-		this.addPart(this.genButton);
-		this.genButton.onClick = function() {
-			this.parent.listChords();
-		}
-	}
-
-	listChords() {
-		this.parts.length = 0;
-		this.active.length = 0;
-		this.chords = generator.generateProgressionOfLength(8, true, new Chord());
-
-		for (var i = 0; i < this.chords.length; i++) {
-			var x = 6 + (i%4) * 96; //20
-			var y = 16 + this.spacing * Math.floor(i/4); //20 + this.spacing * i
-			var newChord = new ChordDisplay("Chord", x, y, 100, 30, this);
-			newChord.setChord(this.chords[i]);
-			this.addPart(newChord);
-		}
-		this.addPart(this.genButton);
 	}
 }
