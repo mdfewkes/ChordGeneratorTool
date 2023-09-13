@@ -5,7 +5,7 @@ class UIElement {
 	constructor(name, x, y, w, h) {
 		this.name = name;
 		this.parent = {x:0, y:0};
-		this.mi = null;
+		this._mi = null;
 
 		this.parts = [];
 		this.active = [];
@@ -21,8 +21,7 @@ class UIElement {
 		this.onUpdate();
 	}
 
-	onUpdate() {
-	}
+	onUpdate() {}
 
 	draw() {
 		this.onDraw();
@@ -43,6 +42,7 @@ class UIElement {
 		for (var i = this.active.length -1; i >= 0; i--) {
 			if (isInElement(this.active[i], x, y)) {
 				this.active[i].leftMouseClick(x, y);
+				mouseJustPressed = false;
 				return;
 			}
 		}
@@ -55,7 +55,6 @@ class UIElement {
 
 	addPart(part, isActive = true) {
 		part.parent = this;
-		part.mi = this.mi;
 		part.updatePosition();
 
 		this.parts.push(part);
@@ -83,9 +82,13 @@ class UIElement {
 	}
 
 	setLeastActive() {
-		this.setActive(false);
+		if (!this.isActive()) {
+			this.setActive();
+			return;
+		}
 
-		this.parent.active.splice(0, 0, this);
+		this.parent.active.splice(this.parent.active.indexOf(this), 1);
+		this.parent.active.unshift(this);
 	}
 
 	setActive(isActive = true) {
@@ -115,6 +118,14 @@ class UIElement {
 			this.parts[i].updatePosition();
 		}
 	}
+
+	mi() {
+		if (this._mi == null) {
+			this._mi = this.parent.mi();
+		}
+
+		return this._mi;
+	}
 }
 
 function isInElement(uiElement, x, y) {
@@ -131,7 +142,19 @@ function isInElement(uiElement, x, y) {
 class UIMainInterface extends UIElement {
 	constructor(name, screenWidth, screenHeight) {
 		super(name, 0, 0, screenWidth, screenHeight);
-		this.mi = this;
+		this._mi = this;
+
+		this.lateDraw = [];
+	}
+
+	draw() {
+		super.draw();
+
+		for (var i = 0; i < this.lateDraw.length; i++) {
+			this.lateDraw[i].lateDraw();
+		}
+
+		this.lateDraw.length = 0;
 	}
 
 	onUpdate() {
@@ -142,6 +165,7 @@ class UIMainInterface extends UIElement {
 
 	onDraw() {}
 	setMostActive() {}
+	setLeastActive() {}
 	setActive(isActive) {}
 	isActive() { return true; }
 }
@@ -269,16 +293,17 @@ class UICloseButton extends UIButton {
 		colorLine(this.x, this.y + this.h, this.x + this.w, this.y, 3, 'blue');
 	}
 
-	onClick() {
+	onLeftMouseClick() {
+		super.onLeftMouseClick();
 		this.parent.setActive(false);
 	}
 }
 
 class UIButtonWToolTip extends UIButton {
-	constructor(name, x, y, w, h) {
+	constructor(name, x, y, w, h, tipText = "") {
 		super(name, x, y, w, h);
 
-		this.toolTip = "";
+		this.toolTip = tipText;
 		this.textAlignment = "start";
 	}
 
@@ -286,15 +311,20 @@ class UIButtonWToolTip extends UIButton {
 		super.onDraw();
 
 		if (this.toolTip != "" && isInElement(this, mouseX, mouseY)) {
-			colorText(this.toolTip, mouseX+1, mouseY+1, "white", "14px Arial", this.textAlignment);
-			colorText(this.toolTip, mouseX-1, mouseY+1, "white", "14px Arial", this.textAlignment);
-			colorText(this.toolTip, mouseX,   mouseY-1, "white", "14px Arial", this.textAlignment);
-			colorText(this.toolTip, mouseX,   mouseY,   "black", "14px Arial", this.textAlignment);
+			this.mi().lateDraw.push(this);
 		}
+	}
+
+	lateDraw() {
+		colorText(this.toolTip, mouseX+1, mouseY+1, "white", "14px Arial", this.textAlignment);
+		colorText(this.toolTip, mouseX-1, mouseY+1, "white", "14px Arial", this.textAlignment);
+		colorText(this.toolTip, mouseX+1, mouseY-1, "white", "14px Arial", this.textAlignment);
+		colorText(this.toolTip, mouseX-1, mouseY-1, "white", "14px Arial", this.textAlignment);
+		colorText(this.toolTip, mouseX,   mouseY,   "black", "14px Arial", this.textAlignment);
 	}
 }
 
-class UIToggle extends UIElement {
+class UIToggle extends UIButton {
 	constructor(name, x, y, w, h) {
 		super(name, x, y, w, h);
 
@@ -309,27 +339,25 @@ class UIToggle extends UIElement {
 		}
 	}
 
-	onClick() {
+	onLeftMouseClick() {
 		this.toggle = this.toggle ? false : true;
 
 		if (this.toggle) this.onTrue();
 		else this.onFalse();
+
+		super.onLeftMouseClick();
 	}
 
-	onTrue() {
-
-	}
-
-	onFalse() {
-
-	}
+	onClick() {}
+	onTrue() {}
+	onFalse() {}
 }
 
-class UIToggleWToolTip extends UIElement {
-	constructor(name, x, y, w, h) {
+class UIToggleWToolTip extends UIToggle {
+	constructor(name, x, y, w, h, tipText = "") {
 		super(name, x, y, w, h);
 
-		this.toolTip = "";
+		this.toolTip = tipText;
 		this.textAlignment = "start";
 	}
 
@@ -337,11 +365,16 @@ class UIToggleWToolTip extends UIElement {
 		super.onDraw();
 
 		if (this.toolTip != "" && isInElement(this, mouseX, mouseY)) {
-			colorText(this.toolTip, mouseX+1, mouseY+1, "white", "14px Arial", this.textAlignment);
-			colorText(this.toolTip, mouseX-1, mouseY+1, "white", "14px Arial", this.textAlignment);
-			colorText(this.toolTip, mouseX, mouseY-1, "white", "14px Arial", this.textAlignment);
-			colorText(this.toolTip, mouseX, mouseY, "black", "14px Arial", this.textAlignment);
+			this.mi().lateDraw.push(this);
 		}
+	}
+
+	lateDraw() {
+		colorText(this.toolTip, mouseX+1, mouseY+1, "white", "14px Arial", this.textAlignment);
+		colorText(this.toolTip, mouseX-1, mouseY+1, "white", "14px Arial", this.textAlignment);
+		colorText(this.toolTip, mouseX+1, mouseY-1, "white", "14px Arial", this.textAlignment);
+		colorText(this.toolTip, mouseX-1, mouseY-1, "white", "14px Arial", this.textAlignment);
+		colorText(this.toolTip, mouseX,   mouseY,   "black", "14px Arial", this.textAlignment);
 	}
 }
 
@@ -384,12 +417,12 @@ class UIMoveBar extends UIElement {
 }
 
 class UITextLabel extends UIElement {
-	constructor(name, x, y, w, h) {
+	constructor(name, x, y, w, h, text = "") {
 		super(name, x, y, w, h);
 
 		this.size = 14;
 		this.textAlignment = "left";
-		this.label = "";
+		this.label = text;
 	}
 
 	onDraw() {

@@ -13,7 +13,7 @@ musicEngine = function() {
 			"F#4": "Fs4.mp3",
 			"A4" : "A4.mp3",
 		},
-		release: 1,
+		release: 0.5,
 		baseUrl: "https://tonejs.github.io/audio/salamander/",
 	}).toDestination();
 
@@ -62,7 +62,7 @@ musicEngine = function() {
 			}
 		}
 
-		noteList.unshift(NoteNumber[chord.root] + (chord.root < 10 ? "3" : "2"));
+		noteList.unshift(NoteNumber[chord.root] + (chord.root <= 9 ? "3" : "2"));
 
 		var pianoSequence = new Tone.Sequence(function(time, note) {
 			piano.triggerAttackRelease(note, duration);
