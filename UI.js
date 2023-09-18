@@ -260,6 +260,84 @@ class UIMaskBox extends UIElement {
 	}
 }
 
+class UIScrollBoxH extends UIMaskBox {
+	constructor(name, x, y, w, h) {
+		super(name, x, y, w, h);
+
+		this.drawBorder = true;
+	}
+}
+
+class UIScrollBoxV extends UIMaskBox {
+	constructor(name, x, y, w, h) {
+		super(name, x, y, w, h);
+
+		this.drawBorder = true;
+	}
+}
+
+class UIXYHandle extends UIElement {
+	constructor(name, x, y, w, h) {
+		super(name, x, y, w, h);
+		
+		this.xScrollMag = 0;
+		this.yScrollMag = 0;
+
+		this.handle = this.addPart(new UIElement("handle", 0, 0, this.w, this.h));
+		this.grabbed = false;
+		this.grabbedX = -1;
+		this.grabbedY = -1;
+		this.handleX = -1;
+		this.handleY = -1;
+		this.handle.onLeftMouseClick = function() { 
+			this.parent.grabbed = true; 
+			this.parent.grabbedX = mouseX;
+			this.parent.grabbedY = mouseY;
+			this.parent.handleX = this.xoff;
+			this.parent.handleY = this.yoff;
+		}
+	}
+
+	onUpdate() {
+		if (!mouseIsDown) {
+			this.grabbed = false;
+		}
+
+		if (this.grabbed) {
+			var newX = this.handleX + mouseX - this.grabbedX;
+			var newY = this.handleY + mouseY - this.grabbedY;
+
+			if (newX < 0) newX = 0;
+			if (newY < 0) newY = 0;
+			if (newX > this.w - this.handle.w) newX = this.w - this.handle.w;
+			if (newY > this.h - this.handle.h) newY = this.h - this.handle.h;
+
+			this.handle.updatePosition(newX, newY);
+
+			var newXScrollMag = newX / (this.w - this.handle.w);
+			var newYScrollMag = newY / (this.h - this.handle.h);
+			if (Number.isNaN(newXScrollMag)) newXScrollMag = 0;
+			if (Number.isNaN(newYScrollMag)) newYScrollMag = 0;
+
+			if (newXScrollMag != this.xScrollMag || newYScrollMag != this.yScrollMag) this.onValueChanged();
+			this.xScrollMag = newXScrollMag;
+			this.yScrollMag = newYScrollMag;
+		}
+	}
+
+	scaleHandle(wScale, hScale) {
+		if (wScale < 0) wScale = 0;
+		if (hScale < 0) hScale = 0;
+		if (wScale > 1) wScale = 1;
+		if (hScale > 1) hScale = 1;
+
+		this.handle.w = this.w * wScale;
+		this.handle.h = this.h * hScale;
+	}
+
+	onValueChanged() {}
+}
+
 class UIButton extends UIElement {
 	constructor(name, x, y, w, h) {
 		super(name, x, y, w, h);
@@ -398,7 +476,7 @@ class UIMoveBar extends UIElement {
 	}
 
 	onUpdate() {
-		if (!mouseIsDown || mouseX < 0 || mouseY < 0 || mouseX >= this.mi.w || mouseY >= this.mi.h) {
+		if (!mouseIsDown || mouseX < 0 || mouseY < 0 || mouseX >= this.mi().w || mouseY >= this.mi().h) {
 			this.grabbed = false;
 		}
 
