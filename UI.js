@@ -264,15 +264,17 @@ class UIScrollBox extends UIElement {
 	constructor(name, x, y, w, h) {
 		super(name, x, y, w, h);
 
-		this.mask = this.addPart(new UIMaskBox("Scroll Mask", borderSize, borderSize, this.w-borderBack, this.h-10-borderBack));
+		this.mask = this.addPart(new UIMaskBox("Scroll Mask", borderSize, borderSize, this.w - borderBack, this.h - borderBack));
 		this.padding = 10;
 		this.maxOffsetX = 0;
 		this.maxOffsetY = 0;
 
 		this.addPart = function(part) {
-			this.mask.addPart(part);
+			let newPart = this.mask.addPart(part);
 			this.findMaxOffset();
 			this.validateScrollPosition();
+
+			return newPart;
 		}
 		this.removePart = function(part) {
 			this.mask.removePart(part);
@@ -404,6 +406,9 @@ class UIXYHandle extends UIElement {
 		this.handle.w = this.w * wScale;
 		this.handle.h = this.h * hScale;
 
+		if (this.handle.w < 10) this.handle.w = 10;
+		if (this.handle.h < 10) this.handle.h = 10;
+
 		let newX = (this.w - this.handle.w) * this.xScrollMag;
 		let newY = (this.h - this.handle.h) * this.yScrollMag;
 		this.handle.updatePosition(newX, newY);
@@ -414,6 +419,8 @@ class UIXYHandle extends UIElement {
 		if (y < 0) y = 0;
 		if (x > 1) x = 1;
 		if (y > 1) y = 1;
+		if (Number.isNaN(x)) x = 0;
+		if (Number.isNaN(y)) y = 0;
 
 		this.xScrollMag = x;
 		this.yScrollMag = y;
@@ -457,12 +464,14 @@ class UIScrollBoxH extends UIElement {
 		}
 
 		this.addPart = function(part) {
-			this.scrollBox.addPart(part);
+			let newPart = this.scrollBox.addPart(part);
 
 			let xScale = this.scrollBox.w / -this.scrollBox.maxOffsetX;
 			this.scrollBar.scaleHandle(xScale, 1);
 
 			this.scrollBar.setHandleLocationScaled(this.scrollBox.mask.xoffset / this.scrollBox.maxOffsetX, 0);
+
+			return newPart;
 		}
 		this.removePart = function(part) {
 			this.scrollBox.removePart(part);
@@ -506,12 +515,14 @@ class UIScrollBoxV extends UIElement {
 		}
 
 		this.addPart = function(part) {
-			this.scrollBox.addPart(part);
+			let newPart = this.scrollBox.addPart(part);
 
 			let yScale = this.scrollBox.h / -this.scrollBox.maxOffsetY;
 			this.scrollBar.scaleHandle(1, yScale);
 
 			this.scrollBar.setHandleLocationScaled(0, this.scrollBox.mask.yoffset / this.scrollBox.maxOffsetY);
+
+			return newPart;
 		}
 		this.removePart = function(part) {
 			this.scrollBox.removePart(part);
@@ -532,18 +543,16 @@ class UIScrollBoxHV extends UIElement {
 
 		this.scrollLButton = this.addPart(new UIButton("Scroll Left", 0, this.h-10, 10, 10));
 		this.scrollRButton = this.addPart(new UIButton("Scroll Right", this.w-20, this.h-10, 10, 10));
-		this.scrollBarH = this.addPart(new UIXYHandle("Scroll Bar", 10, this.h-10, this.w-30, 10));
-
 		this.scrollUButton = this.addPart(new UIButton("Scroll Up", this.w-10, 0, 10, 10));
 		this.scrollDButton = this.addPart(new UIButton("Scroll Down", this.w-10, this.h-20, 10, 10));
-		this.scrollBarV = this.addPart(new UIXYHandle("Scroll Bar", this.w-10, 10, 10, this.h-30));
+		this.scrollBarH = this.addPart(new UIXYHandle("Scroll Bar Horizontal", 10, this.h-10, this.w-30, 10));
+		this.scrollBarV = this.addPart(new UIXYHandle("Scroll Bar Vertical", this.w-10, 10, 10, this.h-30));
 
 		this.scrollLButton.scrollBox = this.scrollBox;
 		this.scrollRButton.scrollBox = this.scrollBox;
-		this.scrollBarH.scrollBox = this.scrollBox;
-
 		this.scrollUButton.scrollBox = this.scrollBox;
 		this.scrollDButton.scrollBox = this.scrollBox;
+		this.scrollBarH.scrollBox = this.scrollBox;
 		this.scrollBarV.scrollBox = this.scrollBox;
 
 		this.scrollLButton.onClick = function() {
@@ -556,12 +565,6 @@ class UIScrollBoxHV extends UIElement {
 
 			this.parent.scrollBarH.setHandleLocationScaled(this.scrollBox.mask.xoffset / this.scrollBox.maxOffsetX, 0);
 		}
-		this.scrollBarH.onValueChanged = function() {
-			this.scrollBox.mask.setOffsetX(this.scrollBox.maxOffsetX * this.xScrollMag);
-
-			this.parent.scrollBarH.setHandleLocationScaled(this.scrollBox.mask.xoffset / this.scrollBox.maxOffsetX, 0);
-		}
-
 		this.scrollUButton.onClick = function() {
 			this.scrollBox.scrollUp();
 
@@ -572,6 +575,11 @@ class UIScrollBoxHV extends UIElement {
 
 			this.parent.scrollBarV.setHandleLocationScaled(0, this.scrollBox.mask.yoffset / this.scrollBox.maxOffsetY);
 		}
+		this.scrollBarH.onValueChanged = function() {
+			this.scrollBox.mask.setOffsetX(this.scrollBox.maxOffsetX * this.xScrollMag);
+
+			this.parent.scrollBarH.setHandleLocationScaled(this.scrollBox.mask.xoffset / this.scrollBox.maxOffsetX, 0);
+		}
 		this.scrollBarV.onValueChanged = function() {
 			this.scrollBox.mask.setOffsetY(this.scrollBox.maxOffsetY * this.yScrollMag);
 
@@ -579,29 +587,27 @@ class UIScrollBoxHV extends UIElement {
 		}
 
 		this.addPart = function(part) {
-			this.scrollBox.addPart(part);
+			let newPart = this.scrollBox.addPart(part);
 
 			let xScale = this.scrollBox.w / -this.scrollBox.maxOffsetX;
 			this.scrollBarH.scaleHandle(xScale, 1);
-
 			this.scrollBarH.setHandleLocationScaled(this.scrollBox.mask.xoffset / this.scrollBox.maxOffsetX, 0);
 
 			let yScale = this.scrollBox.h / -this.scrollBox.maxOffsetY;
 			this.scrollBarV.scaleHandle(1, yScale);
-
 			this.scrollBarV.setHandleLocationScaled(0, this.scrollBox.mask.yoffset / this.scrollBox.maxOffsetY);
+
+			return newPart;
 		}
 		this.removePart = function(part) {
 			this.scrollBox.removePart(part);
 			
 			let xScale = this.scrollBox.w / -this.scrollBox.maxOffsetX;
 			this.scrollBarH.scaleHandle(xScale, 1);
-
 			this.scrollBarH.setHandleLocationScaled(this.scrollBox.mask.xoffset / this.scrollBox.maxOffsetX, 0);
 
 			let yScale = this.scrollBox.h / -this.scrollBox.maxOffsetY;
 			this.scrollBarV.scaleHandle(1, yScale);
-
 			this.scrollBarV.setHandleLocationScaled(0, this.scrollBox.mask.yoffset / this.scrollBox.maxOffsetY);
 		}
 	}
@@ -789,6 +795,8 @@ class UIDropdown extends UIElement {
 		this.textAlignment = "center";
 
 		this.open = false;
+
+		this.dropdown = this.addPart(new UIDropdownList(this.name + " dropdown list", 0, 0, 0, 0), false);
 		this.updateListElement();
 	}
 
@@ -812,13 +820,15 @@ class UIDropdown extends UIElement {
 	updateListElement() {
 		if (this.list == undefined) return;
 
-		this.parts.length = 0;
 		this.active.length = 0;
+
 		var height = this.list.length * (this.size + 3);
 		var y = this.center ? -height * 0.5 : 0;
 		if (this.y + y < 0) y -= this.y + y;
-		if (this.y + height + y > canvas.height) y -= this.y + height + y - canvas.height
-		this.addPart(new UIDropdownList(this.name + " dropdown list", 0, y, this.w, height, this), this.open);
+		if (this.y + height + y > canvas.height) y -= this.y + height + y - canvas.height;
+
+		this.dropdown.updatePosition(0, y, this.w, height);
+		this.dropdown.setActive(this.open);
 	}
 
 	closeList() {
@@ -828,9 +838,9 @@ class UIDropdown extends UIElement {
 	}
 
 	openList() {
-		this.active.push(this.parts[0]);
+		this.dropdown.setActive(true);
 		this.open = true;
-		this.parts[0].justOpened = true;
+		this.dropdown.justOpened = true;
 	}
 }
 

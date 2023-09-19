@@ -54,8 +54,8 @@ window.onload = function() {
 
 	mainInterface = new UIMainInterface("ChordTool", canvas.width, canvas.height);
 
-	ruleWindow = mainInterface.addPart(new RuleBoxBox("The Box O Rules", 0, 0, 345, 600), true);
-	chordWindow = mainInterface.addPart(new ChordDisplayBox("Chord Display Box", 400, 0, 400, 600), true);
+	ruleWindow = mainInterface.addPart(new RuleBoxBox("The Box O Rules", 10, 10, 355, 580), true);
+	chordWindow = mainInterface.addPart(new ChordDisplayBox("Chord Display Box", 390, 10, 400, 580), true);
 
 	var testPanel = mainInterface.addPart(new UIElement("testpanel", 100, 100, 600, 300), false);
 	testPanel.addPart(new UIButton("testbutton1", 20, 20, 20, 20));
@@ -67,7 +67,6 @@ window.onload = function() {
 	testPanel.addPart(new UIXYHandle("testscrollbar", 590, 10, 10, 290)).scaleHandle(1, 0.03448);
 	var scrolltest = testPanel.addPart(new UIScrollBoxHV("testscrollbox", 100, 130, 150, 150));
 	scrolltest.addPart(new RuleBox("filltest", 10, 10, 0, 0));
-	scrolltest.addPart(new RuleBox("filltest", 30, 300, 0, 0));
 
 	nextFrame();
 }
@@ -143,52 +142,23 @@ class RuleBoxBox extends UIElement {
 	constructor(name, x, y, w, h) {
 		super(name, x, y, w, h);
 
-		this.ruleMask = new UIMaskBox("Rule Mask", x + 10, y + borderSize, w - 20, h - borderBack);
+		this.ruleMask = new UIScrollBoxV("Rule Mask", 0, 0, w, h);
 		this.addPart(this.ruleMask);
 
 		this.ruleBoxes = [];
-		for (var i = 0; i < 4; i++) {
-			this.addRule();
-		}
 
-		var genButton = new UIButtonWToolTip("Generate", 0, 0, 10, 10);
-		this.addPart(genButton);
-		genButton.toolTip = "Generate sequence";
-		genButton.onClick = function() {
-			this.parent.sendRulesToGenerator();
-			chordWindow.listChords();
-		}
-
-		var addButton = new UIButtonWToolTip("Add Rule", this.x+this.w - 10, 0, 10, 10);
+		var addButton = new UIButtonWToolTip("Add Rule", 0, 0, 10, 10);
 		this.addPart(addButton);
 		addButton.toolTip = "Add rule";
-		addButton.textAlignment = "end";
 		addButton.onClick = function() {
 			this.parent.addRule();
 		}
 
-		var rmButton = new UIButtonWToolTip("Remove Rule", this.x+this.w - 10, 10, 10, 10);
+		var rmButton = new UIButtonWToolTip("Remove Rule", 10, 0, 10, 10);
 		this.addPart(rmButton);
 		rmButton.toolTip = "Remove rule";
-		rmButton.textAlignment = "end";
 		rmButton.onClick = function() {
 			this.parent.removeRule();
-		}
-
-		var suButton = new UIButtonWToolTip("Scroll up", this.x+this.w - 10, this.y+this.h - 20, 10, 10);
-		this.addPart(suButton);	
-		suButton.toolTip = "Scroll up";
-		suButton.textAlignment = "end";
-		suButton.onClick = function() {
-			this.parent.scrollUp();
-		}
-
-		var sdButton = new UIButtonWToolTip("Scroll down", this.x+this.w - 10, this.y+this.h - 10, 10, 10);
-		this.addPart(sdButton);	
-		sdButton.toolTip = "Scroll down";
-		sdButton.textAlignment = "end";
-		sdButton.onClick = function() {
-			this.parent.scrollDown();
 		}
 
 		this.setRules(generator.getRules());
@@ -200,6 +170,9 @@ class RuleBoxBox extends UIElement {
 
 	addRule(rule = null) {
 		var newRule = new RuleBox("New Rule", 0, 0, 0, 0);
+		this.ruleMask.addPart(newRule);
+		this.ruleBoxes.push(newRule);
+
 		if (rule != null) newRule.setRule(rule);
 
 		var closeUI = new UIButtonWToolTip("Close RuleBox", 315, 0, 10, 10);
@@ -212,8 +185,6 @@ class RuleBoxBox extends UIElement {
 			this.ruleBoxBox.removeRule(this.ruleBox);
 		}
 
-		this.ruleMask.addPart(newRule);
-		this.ruleBoxes.push(newRule);
 
 		this.placeRules();
 	}
@@ -264,47 +235,14 @@ class RuleBoxBox extends UIElement {
 	placeRules() {
 		for (var i = 0; i < this.ruleBoxes.length; i++) {
 			this.ruleBoxes[i].name = "Rule " + i;
-			this.ruleBoxes[i].updatePosition(0, 10 - borderSize + i * 70);
+			this.ruleBoxes[i].updatePosition(9, 9 - borderSize + i * 68);
 		}
 
-		this.validateScrollPosition();
+		this.ruleMask.scrollBox.validateScrollPosition();
 	}
 
 	sendRulesToGenerator() {
 		generator.setRules(this.getRules());
-	}
-
-	scrollUp() {
-		this.ruleMask.addOffsetY(40);
-		this.validateScrollPosition();
-	}
-
-
-	scrollDown() {
-		this.ruleMask.addOffsetY(-40);
-		this.validateScrollPosition();
-	}
-
-	validateScrollPosition() {
-		var maxOffset = this.ruleBoxes.length * -70 + this.ruleMask.h;
-
-		// Not enough content to scroll
-		if (maxOffset >= 0) {
-			this.ruleMask.setOffsetY(0);
-			return;
-		}
-
-		// Reached top
-		if (this.ruleMask.yoffset > 0) {
-			this.ruleMask.setOffsetY(0);
-			return;
-		}
-
-		// Reached Bottom
-		if (this.ruleMask.yoffset < maxOffset) {
-			this.ruleMask.setOffsetY(maxOffset);
-			return;
-		}
 	}
 }
 
