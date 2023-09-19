@@ -54,17 +54,20 @@ window.onload = function() {
 
 	mainInterface = new UIMainInterface("ChordTool", canvas.width, canvas.height);
 
-	ruleWindow = mainInterface.addPart(new RuleBoxBox("The Box O Rules", 0, 0, 345, 600), false);
-	chordWindow = mainInterface.addPart(new ChordDisplayBox("Chord Display Box", 400, 0, 400, 600), false);
+	ruleWindow = mainInterface.addPart(new RuleBoxBox("The Box O Rules", 0, 0, 345, 600), true);
+	chordWindow = mainInterface.addPart(new ChordDisplayBox("Chord Display Box", 400, 0, 400, 600), true);
 
-	var testPanel = mainInterface.addPart(new UIElement("testpanel", 100, 100, 600, 300), true);
+	var testPanel = mainInterface.addPart(new UIElement("testpanel", 100, 100, 600, 300), false);
 	testPanel.addPart(new UIButton("testbutton1", 20, 20, 20, 20));
 	testPanel.addPart(new ChordDisplay("testchorddisplay", 60, 20, 200, 20));
 	testPanel.addPart(new ChordBox("testchordbox", 20, 60, 20, 20));
 	testPanel.addPart(new RuleBox("testruledisplay", 260, 60, 200, 20));
 	testPanel.addPart(new UIMoveBar("testmovebar", 0, 0, 600, 10));
 	testPanel.addPart(new UICloseButton("testclose", 590, 0, 10, 10));
-	testPanel.addPart(new UIXYHandle("testscroll", 590, 10, 10, 290), true).scaleHandle(1, 0.03448);
+	testPanel.addPart(new UIXYHandle("testscrollbar", 590, 10, 10, 290)).scaleHandle(1, 0.03448);
+	var scrolltest = testPanel.addPart(new UIScrollBoxHV("testscrollbox", 100, 130, 150, 150));
+	scrolltest.addPart(new RuleBox("filltest", 10, 10, 0, 0));
+	scrolltest.addPart(new RuleBox("filltest", 30, 300, 0, 0));
 
 	nextFrame();
 }
