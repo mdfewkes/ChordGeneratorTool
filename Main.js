@@ -57,7 +57,7 @@ window.onload = function() {
 	ruleWindow = mainInterface.addPart(new RuleBoxBox("The Box O Rules", 10, 10, 355, 580), true);
 	chordWindow = mainInterface.addPart(new ChordDisplayBox("Chord Display Box", 390, 10, 400, 580), true);
 
-	var testPanel = mainInterface.addPart(new UIElement("testpanel", 100, 100, 600, 300), false);
+	var testPanel = mainInterface.addPart(new UIElement("testpanel", 100, 100, 600, 300), true);
 	testPanel.addPart(new UIButton("testbutton1", 20, 20, 20, 20));
 	testPanel.addPart(new ChordDisplay("testchorddisplay", 60, 20, 200, 20));
 	testPanel.addPart(new ChordBox("testchordbox", 20, 60, 20, 20));
@@ -65,8 +65,8 @@ window.onload = function() {
 	testPanel.addPart(new UIMoveBar("testmovebar", 0, 0, 600, 10));
 	testPanel.addPart(new UICloseButton("testclose", 590, 0, 10, 10));
 	testPanel.addPart(new UIXYHandle("testscrollbar", 590, 10, 10, 290)).scaleHandle(1, 0.03448);
-	var scrolltest = testPanel.addPart(new UIScrollBoxHV("testscrollbox", 100, 130, 150, 150));
-	scrolltest.addPart(new RuleBox("filltest", 10, 10, 0, 0));
+	 scrolltest = testPanel.addPart(new UIScrollBoxHV("testscrollbox", 100, 130, 150, 150));
+	scrolltest.addPart(new RuleBox("filltest", -10, 10, 0, 0));
 
 	nextFrame();
 }
@@ -142,8 +142,7 @@ class RuleBoxBox extends UIElement {
 	constructor(name, x, y, w, h) {
 		super(name, x, y, w, h);
 
-		this.ruleMask = new UIScrollBoxV("Rule Mask", 0, 0, w, h);
-		this.addPart(this.ruleMask);
+		this.scrollBox = this.addPart(new UIScrollBoxV("Rule Mask", 0, 0, w, h));
 
 		this.ruleBoxes = [];
 
@@ -165,12 +164,12 @@ class RuleBoxBox extends UIElement {
 	}
 
 	onUpdate() {
-		this.ruleMask.setLeastActive();
+		this.scrollBox.setLeastActive();
 	}
 
 	addRule(rule = null) {
-		var newRule = new RuleBox("New Rule", 0, 0, 0, 0);
-		this.ruleMask.addPart(newRule);
+		var newRule = new RuleBox("New Rule", 9, 9 - borderSize + this.ruleBoxes.length * 68);
+		this.scrollBox.addPart(newRule);
 		this.ruleBoxes.push(newRule);
 
 		if (rule != null) newRule.setRule(rule);
@@ -238,7 +237,8 @@ class RuleBoxBox extends UIElement {
 			this.ruleBoxes[i].updatePosition(9, 9 - borderSize + i * 68);
 		}
 
-		this.ruleMask.scrollBox.validateScrollPosition();
+		this.scrollBox.scrollBox.findMaxOffset();
+		this.scrollBox.scrollBox.validateScrollPosition();
 	}
 
 	sendRulesToGenerator() {
@@ -267,7 +267,9 @@ class ChordDisplay extends UIElement {
 		this.chord = chord;
 	}
 
-	leftMouseClick() {}
+	leftMouseClick() {
+		musicEngine.playChord(this.chord);
+	}
 }
 
 class ChordDisplayBox extends UIElement {

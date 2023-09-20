@@ -42,6 +42,7 @@ musicEngine = function() {
 	}
 
 	this.playChord = function(chord, duration = 4) {
+		piano.releaseAll();
 		playChord(chord, duration);
 	}
 

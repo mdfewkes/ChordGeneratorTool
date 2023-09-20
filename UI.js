@@ -266,6 +266,8 @@ class UIScrollBox extends UIElement {
 
 		this.mask = this.addPart(new UIMaskBox("Scroll Mask", borderSize, borderSize, this.w - borderBack, this.h - borderBack));
 		this.padding = 10;
+		this.minOffsetX = 0;
+		this.minOffsetY = 0;
 		this.maxOffsetX = 0;
 		this.maxOffsetY = 0;
 
@@ -307,6 +309,8 @@ class UIScrollBox extends UIElement {
 	findMaxOffset() {
 		this.maxOffsetX = 0;
 		this.maxOffsetY = 0;
+		this.minOffsetX = 0;
+		this.minOffsetY = 0;
 		for (let i = 0; i < this.mask.active.length; i++) {
 			let part = this.mask.active[i];
 			if (part.xoff + part.w + this.padding - this.mask.w > this.maxOffsetX) {
@@ -315,25 +319,45 @@ class UIScrollBox extends UIElement {
 			if (part.yoff + part.h + this.padding - this.mask.h > this.maxOffsetY) {
 				this.maxOffsetY = part.yoff + part.h + this.padding - this.mask.h;
 			}
+			if (part.xoff - this.padding < this.minOffsetX) {
+				this.minOffsetX = part.xoff - this.padding;
+			}
+			if (part.yoff - this.padding < this.maminOffsetY) {
+				this.mminOffsetY = part.yoff - this.padding;
+			}
 		}
 		this.maxOffsetX *= -1;
 		this.maxOffsetY *= -1;
+		this.minOffsetX *= -1;
+		this.minOffsetY *= -1;
+	}
+
+	findScrollOffsetMagX() {
+		return (this.mask.xoffset - this.minOffsetX) / (this.maxOffsetX - this.minOffsetX);
+	}
+
+	findScrollOffsetMagY() {
+		return (this.mask.yoffset - this.minOffsetY) / (this.maxOffsetY - this.minOffsetY);
 	}
 
 	validateScrollPosition() {
-		if (this.maxOffsetX >= 0) {
-			this.mask.setOffsetX(0);
-		} else if (this.mask.xoffset > 0) {
-			this.mask.setOffsetX(0);
-		} else if (this.mask.xoffset < this.maxOffsetX) {
+		if (this.maxOffsetX >= this.minOffsetX) {
+			this.mask.setOffsetX(this.minOffsetX);
+		} else 
+		if (this.mask.xoffset > this.minOffsetX) {
+			this.mask.setOffsetX(this.minOffsetX);
+		} else 
+		if (this.mask.xoffset < this.maxOffsetX) {
 			this.mask.setOffsetX(this.maxOffsetX);
 		}
 
-		if (this.maxOffsetY >= 0) {
-			this.mask.setOffsetY(0);
-		} else if (this.mask.yoffset > 0) {
-			this.mask.setOffsetY(0);
-		} else if (this.mask.yoffset < this.maxOffsetY) {
+		if (this.maxOffsetY >= this.minOffsetY) { //Not enough to scroll
+			this.mask.setOffsetY(this.minOffsetY);
+		} else 
+		if (this.mask.yoffset > this.minOffsetY) { //Hit the top
+			this.mask.setOffsetY(this.minOffsetY);
+		} else 
+		if (this.mask.yoffset < this.maxOffsetY) { //Hit the bottom
 			this.mask.setOffsetY(this.maxOffsetY);
 		}
 	}
@@ -402,6 +426,8 @@ class UIXYHandle extends UIElement {
 		if (hScale < 0) hScale = 0;
 		if (wScale > 1) wScale = 1;
 		if (hScale > 1) hScale = 1;
+		if (Number.isNaN(wScale)) wScale = 0;
+		if (Number.isNaN(hScale)) hScale = 0;
 
 		this.handle.w = this.w * wScale;
 		this.handle.h = this.h * hScale;
@@ -450,17 +476,17 @@ class UIScrollBoxH extends UIElement {
 		this.scrollLButton.onClick = function() {
 			this.scrollBox.scrollLeft();
 
-			this.parent.scrollBar.setHandleLocationScaled(this.scrollBox.mask.xoffset / this.scrollBox.maxOffsetX, 0);
+			this.parent.scrollBar.setHandleLocationScaled(this.scrollBox.findScrollOffsetMagX(), 0);
 		}
 		this.scrollRButton.onClick = function() {
 			this.scrollBox.scrollRight();
 
-			this.parent.scrollBar.setHandleLocationScaled(this.scrollBox.mask.xoffset / this.scrollBox.maxOffsetX, 0);
+			this.parent.scrollBar.setHandleLocationScaled(this.scrollBox.findScrollOffsetMagX(), 0);
 		}
 		this.scrollBar.onValueChanged = function() {
 			this.scrollBox.mask.setOffsetX(this.scrollBox.maxOffsetX * this.xScrollMag);
 
-			this.parent.scrollBar.setHandleLocationScaled(this.scrollBox.mask.xoffset / this.scrollBox.maxOffsetX, 0);
+			this.parent.scrollBar.setHandleLocationScaled(this.scrollBox.findScrollOffsetMagX(), 0);
 		}
 
 		this.addPart = function(part) {
@@ -469,7 +495,7 @@ class UIScrollBoxH extends UIElement {
 			let xScale = this.scrollBox.w / -this.scrollBox.maxOffsetX;
 			this.scrollBar.scaleHandle(xScale, 1);
 
-			this.scrollBar.setHandleLocationScaled(this.scrollBox.mask.xoffset / this.scrollBox.maxOffsetX, 0);
+			this.scrollBar.setHandleLocationScaled(this.scrollBox.findScrollOffsetMagX(), 0);
 
 			return newPart;
 		}
@@ -479,7 +505,7 @@ class UIScrollBoxH extends UIElement {
 			let xScale = this.scrollBox.w / -this.scrollBox.maxOffsetX;
 			this.scrollBar.scaleHandle(xScale, 1);
 
-			this.scrollBar.setHandleLocationScaled(this.scrollBox.mask.xoffset / this.scrollBox.maxOffsetX, 0);
+			this.scrollBar.setHandleLocationScaled(this.scrollBox.findScrollOffsetMagX(), 0);
 		}
 	}
 }
@@ -501,17 +527,17 @@ class UIScrollBoxV extends UIElement {
 		this.scrollUButton.onClick = function() {
 			this.scrollBox.scrollUp();
 
-			this.parent.scrollBar.setHandleLocationScaled(0, this.scrollBox.mask.yoffset / this.scrollBox.maxOffsetY);
+			this.parent.scrollBar.setHandleLocationScaled(0, this.scrollBox.findScrollOffsetMagY());
 		}
 		this.scrollDButton.onClick = function() {
 			this.scrollBox.scrollDown();
 
-			this.parent.scrollBar.setHandleLocationScaled(0, this.scrollBox.mask.yoffset / this.scrollBox.maxOffsetY);
+			this.parent.scrollBar.setHandleLocationScaled(0, this.scrollBox.findScrollOffsetMagY());
 		}
 		this.scrollBar.onValueChanged = function() {
 			this.scrollBox.mask.setOffsetY(this.scrollBox.maxOffsetY * this.yScrollMag);
 
-			this.parent.scrollBar.setHandleLocationScaled(0, this.scrollBox.mask.yoffset / this.scrollBox.maxOffsetY);
+			this.parent.scrollBar.setHandleLocationScaled(0, this.scrollBox.findScrollOffsetMagY());
 		}
 
 		this.addPart = function(part) {
@@ -520,7 +546,7 @@ class UIScrollBoxV extends UIElement {
 			let yScale = this.scrollBox.h / -this.scrollBox.maxOffsetY;
 			this.scrollBar.scaleHandle(1, yScale);
 
-			this.scrollBar.setHandleLocationScaled(0, this.scrollBox.mask.yoffset / this.scrollBox.maxOffsetY);
+			this.scrollBar.setHandleLocationScaled(0, this.scrollBox.findScrollOffsetMagY());
 
 			return newPart;
 		}
@@ -530,7 +556,7 @@ class UIScrollBoxV extends UIElement {
 			let yScale = this.scrollBox.h / -this.scrollBox.maxOffsetY;
 			this.scrollBar.scaleHandle(1, yScale);
 
-			this.scrollBar.setHandleLocationScaled(0, this.scrollBox.mask.yoffset / this.scrollBox.maxOffsetY);
+			this.scrollBar.setHandleLocationScaled(0, this.scrollBox.findScrollOffsetMagY());
 		}
 	}
 }
@@ -558,32 +584,32 @@ class UIScrollBoxHV extends UIElement {
 		this.scrollLButton.onClick = function() {
 			this.scrollBox.scrollLeft();
 
-			this.parent.scrollBarH.setHandleLocationScaled(this.scrollBox.mask.xoffset / this.scrollBox.maxOffsetX, 0);
+			this.parent.scrollBarH.setHandleLocationScaled(this.scrollBox.findScrollOffsetMagX(), 0);
 		}
 		this.scrollRButton.onClick = function() {
 			this.scrollBox.scrollRight();
 
-			this.parent.scrollBarH.setHandleLocationScaled(this.scrollBox.mask.xoffset / this.scrollBox.maxOffsetX, 0);
+			this.parent.scrollBarH.setHandleLocationScaled(this.scrollBox.findScrollOffsetMagX(), 0);
 		}
 		this.scrollUButton.onClick = function() {
 			this.scrollBox.scrollUp();
 
-			this.parent.scrollBarV.setHandleLocationScaled(0, this.scrollBox.mask.yoffset / this.scrollBox.maxOffsetY);
+			this.parent.scrollBarV.setHandleLocationScaled(0, this.scrollBox.findScrollOffsetMagY());
 		}
 		this.scrollDButton.onClick = function() {
 			this.scrollBox.scrollDown();
 
-			this.parent.scrollBarV.setHandleLocationScaled(0, this.scrollBox.mask.yoffset / this.scrollBox.maxOffsetY);
+			this.parent.scrollBarV.setHandleLocationScaled(0, this.scrollBox.findScrollOffsetMagY());
 		}
 		this.scrollBarH.onValueChanged = function() {
 			this.scrollBox.mask.setOffsetX(this.scrollBox.maxOffsetX * this.xScrollMag);
 
-			this.parent.scrollBarH.setHandleLocationScaled(this.scrollBox.mask.xoffset / this.scrollBox.maxOffsetX, 0);
+			this.parent.scrollBarH.setHandleLocationScaled(this.scrollBox.findScrollOffsetMagX(), 0);
 		}
 		this.scrollBarV.onValueChanged = function() {
 			this.scrollBox.mask.setOffsetY(this.scrollBox.maxOffsetY * this.yScrollMag);
 
-			this.parent.scrollBarV.setHandleLocationScaled(0, this.scrollBox.mask.yoffset / this.scrollBox.maxOffsetY);
+			this.parent.scrollBarV.setHandleLocationScaled(0, this.scrollBox.findScrollOffsetMagX());
 		}
 
 		this.addPart = function(part) {
@@ -591,11 +617,11 @@ class UIScrollBoxHV extends UIElement {
 
 			let xScale = this.scrollBox.w / -this.scrollBox.maxOffsetX;
 			this.scrollBarH.scaleHandle(xScale, 1);
-			this.scrollBarH.setHandleLocationScaled(this.scrollBox.mask.xoffset / this.scrollBox.maxOffsetX, 0);
+			this.scrollBarH.setHandleLocationScaled(this.scrollBox.findScrollOffsetMagX(), 0);
 
 			let yScale = this.scrollBox.h / -this.scrollBox.maxOffsetY;
 			this.scrollBarV.scaleHandle(1, yScale);
-			this.scrollBarV.setHandleLocationScaled(0, this.scrollBox.mask.yoffset / this.scrollBox.maxOffsetY);
+			this.scrollBarV.setHandleLocationScaled(0, this.scrollBox.findScrollOffsetMagY());
 
 			return newPart;
 		}
@@ -604,11 +630,11 @@ class UIScrollBoxHV extends UIElement {
 			
 			let xScale = this.scrollBox.w / -this.scrollBox.maxOffsetX;
 			this.scrollBarH.scaleHandle(xScale, 1);
-			this.scrollBarH.setHandleLocationScaled(this.scrollBox.mask.xoffset / this.scrollBox.maxOffsetX, 0);
+			this.scrollBarH.setHandleLocationScaled(this.scrollBox.findScrollOffsetMagX(), 0);
 
 			let yScale = this.scrollBox.h / -this.scrollBox.maxOffsetY;
 			this.scrollBarV.scaleHandle(1, yScale);
-			this.scrollBarV.setHandleLocationScaled(0, this.scrollBox.mask.yoffset / this.scrollBox.maxOffsetY);
+			this.scrollBarV.setHandleLocationScaled(0, this.scrollBox.findScrollOffsetMagY());
 		}
 	}
 }
