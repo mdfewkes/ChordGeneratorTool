@@ -57,16 +57,17 @@ window.onload = function() {
 	ruleWindow = mainInterface.addPart(new RuleBoxBox("The Box O Rules", 10, 10, 355, 580), true);
 	chordWindow = mainInterface.addPart(new ChordDisplayBox("Chord Display Box", 390, 10, 400, 580), true);
 
-	var testPanel = mainInterface.addPart(new UIElement("testpanel", 100, 100, 600, 300), true);
+	var testPanel = mainInterface.addPart(new UIElement("testpanel", 100, 100, 600, 300), false);
 	testPanel.addPart(new UIButton("testbutton1", 20, 20, 20, 20));
 	testPanel.addPart(new ChordDisplay("testchorddisplay", 60, 20, 200, 20));
 	testPanel.addPart(new ChordBox("testchordbox", 20, 60, 20, 20));
 	testPanel.addPart(new RuleBox("testruledisplay", 260, 60, 200, 20));
 	testPanel.addPart(new UIMoveBar("testmovebar", 0, 0, 600, 10));
 	testPanel.addPart(new UICloseButton("testclose", 590, 0, 10, 10));
-	testPanel.addPart(new UIXYHandle("testscrollbar", 590, 10, 10, 290)).scaleHandle(1, 0.03448);
-	 scrolltest = testPanel.addPart(new UIScrollBoxHV("testscrollbox", 100, 130, 150, 150));
-	scrolltest.addPart(new RuleBox("filltest", -10, 10, 0, 0));
+	var scrolltest = testPanel.addPart(new UIScrollBoxHV("testscrollbox", 100, 130, 150, 150));
+	scrolltest.addPart(new RuleBox("filltest", 0, 0, 0, 0));
+	scrolltest.addPart(new RuleBox("filltest", 0, 70, 0, 0));
+	scrolltest.addPart(new RuleBox("filltest", 0, 140, 0, 0));
 
 	nextFrame();
 }
@@ -316,8 +317,9 @@ class ChordDisplayBox extends UIElement {
 	}
 }
 
-const rootUIListSharps = ["C", "B", "A#", "A", "G#", "G", "F#", "F", "E", "D#", "D", "C#", "C"];
-const rootUIListFlats =  ["C", "B", "Bb", "A", "Ab", "G", "Gb", "F", "E", "Eb", "D", "Db", "C"];
+const rootUIListSharps =  ["C", "B", "A#", "A", "G#", "G", "F#", "F", "E", "D#", "D", "C#", "C"];
+const rootUIListFlats =   ["C", "B", "Bb", "A", "Ab", "G", "Gb", "F", "E", "Eb", "D", "Db", "C"];
+const rootUIListCommon =  ["C", "B", "Bb", "A", "Ab", "G", "F#", "F", "E", "Eb", "D", "C#", "C"];
 class ChordBox extends UIElement {
 	constructor(name, x, y, w, h) {
 		super(name, x, y, 220, 60);
@@ -335,7 +337,7 @@ class ChordBox extends UIElement {
 
 		this.rootUI = new UIDropdown("RootMotion Dropdown", 20, 30, 75, 20);
 		this.addPart(this.rootUI);
-		this.rootUI.list = rootUIListFlats;
+		this.rootUI.list = rootUIListCommon;
 		this.rootUI.value = 12;
 		this.rootUI.center = true;
 		this.rootUI.updateListElement();

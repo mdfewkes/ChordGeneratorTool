@@ -333,21 +333,34 @@ class UIScrollBox extends UIElement {
 	}
 
 	findScrollOffsetMagX() {
-		return (this.mask.xoffset - this.minOffsetX) / (this.maxOffsetX - this.minOffsetX);
+		var xOffsetMag = (this.mask.xoffset - this.minOffsetX) / (this.maxOffsetX - this.minOffsetX);
+		if (Number.isNaN(xOffsetMag)) xOffsetMag = 0;
+		return xOffsetMag;
 	}
 
 	findScrollOffsetMagY() {
-		return (this.mask.yoffset - this.minOffsetY) / (this.maxOffsetY - this.minOffsetY);
+		var yOffsetMag = (this.mask.yoffset - this.minOffsetY) / (this.maxOffsetY - this.minOffsetY);
+		if (Number.isNaN(yOffsetMag)) yOffsetMag = 0;
+		return yOffsetMag;
+	}
+
+	setOffestFromMagX(mag) {
+		var offset = this.minOffsetX + mag * (this.maxOffsetX - this.minOffsetX);
+		this.mask.setOffsetX(offset);
+	}
+	setOffestFromMagY(mag) {
+		var offset = this.minOffsetY + mag * (this.maxOffsetY - this.minOffsetY);
+		this.mask.setOffsetY(offset);
 	}
 
 	validateScrollPosition() {
-		if (this.maxOffsetX >= this.minOffsetX) {
+		if (this.maxOffsetX >= this.minOffsetX) { //Not enough to scroll
 			this.mask.setOffsetX(this.minOffsetX);
 		} else 
-		if (this.mask.xoffset > this.minOffsetX) {
+		if (this.mask.xoffset > this.minOffsetX) { //Hit the left
 			this.mask.setOffsetX(this.minOffsetX);
 		} else 
-		if (this.mask.xoffset < this.maxOffsetX) {
+		if (this.mask.xoffset < this.maxOffsetX) { //Hit the right
 			this.mask.setOffsetX(this.maxOffsetX);
 		}
 
@@ -400,6 +413,8 @@ class UIXYHandle extends UIElement {
 
 			if (newX < 0) newX = 0;
 			if (newY < 0) newY = 0;
+			newX = Math.round(newX);
+			newY = Math.round(newY);
 			if (newX > this.w - this.handle.w) newX = this.w - this.handle.w;
 			if (newY > this.h - this.handle.h) newY = this.h - this.handle.h;
 
@@ -410,9 +425,11 @@ class UIXYHandle extends UIElement {
 			if (Number.isNaN(newXScrollMag)) newXScrollMag = 0;
 			if (Number.isNaN(newYScrollMag)) newYScrollMag = 0;
 
-			if (newXScrollMag != this.xScrollMag || newYScrollMag != this.yScrollMag) this.onValueChanged();
+			var oldXScrollMag = this.xScrollMag;
+			var oldYScrollMag = this.yScrollMag;
 			this.xScrollMag = newXScrollMag;
 			this.yScrollMag = newYScrollMag;
+			if (newXScrollMag != oldXScrollMag || newYScrollMag != oldYScrollMag) this.onValueChanged();
 		}
 	}
 
@@ -484,7 +501,7 @@ class UIScrollBoxH extends UIElement {
 			this.parent.scrollBar.setHandleLocationScaled(this.scrollBox.findScrollOffsetMagX(), 0);
 		}
 		this.scrollBar.onValueChanged = function() {
-			this.scrollBox.mask.setOffsetX(this.scrollBox.maxOffsetX * this.xScrollMag);
+			this.scrollBox.setOffestFromMagX(this.xScrollMag);
 
 			this.parent.scrollBar.setHandleLocationScaled(this.scrollBox.findScrollOffsetMagX(), 0);
 		}
@@ -535,7 +552,7 @@ class UIScrollBoxV extends UIElement {
 			this.parent.scrollBar.setHandleLocationScaled(0, this.scrollBox.findScrollOffsetMagY());
 		}
 		this.scrollBar.onValueChanged = function() {
-			this.scrollBox.mask.setOffsetY(this.scrollBox.maxOffsetY * this.yScrollMag);
+			this.scrollBox.setOffestFromMagY(this.yScrollMag);
 
 			this.parent.scrollBar.setHandleLocationScaled(0, this.scrollBox.findScrollOffsetMagY());
 		}
@@ -602,12 +619,12 @@ class UIScrollBoxHV extends UIElement {
 			this.parent.scrollBarV.setHandleLocationScaled(0, this.scrollBox.findScrollOffsetMagY());
 		}
 		this.scrollBarH.onValueChanged = function() {
-			this.scrollBox.mask.setOffsetX(this.scrollBox.maxOffsetX * this.xScrollMag);
+			this.scrollBox.setOffestFromMagX(this.xScrollMag);
 
 			this.parent.scrollBarH.setHandleLocationScaled(this.scrollBox.findScrollOffsetMagX(), 0);
 		}
 		this.scrollBarV.onValueChanged = function() {
-			this.scrollBox.mask.setOffsetY(this.scrollBox.maxOffsetY * this.yScrollMag);
+			this.scrollBox.setOffestFromMagY(this.yScrollMag);
 
 			this.parent.scrollBarV.setHandleLocationScaled(0, this.scrollBox.findScrollOffsetMagX());
 		}
