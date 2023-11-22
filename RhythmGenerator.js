@@ -63,7 +63,7 @@ function generateNoteRhythm(list) {
 
 		var thisRhythm = thisRhythmOptions[Math.floor(Math.random()*thisRhythmOptions.length)];
 
-		console.log(thisRhythm)
+		// console.log(thisRhythm)
 
 		for (var nextStep = 0; nextStep < thisRhythm.length; nextStep++) {
 			chart.push(thisRhythm[nextStep]);

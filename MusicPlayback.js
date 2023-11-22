@@ -4,7 +4,8 @@ musicEngine = function() {
 	var progression = [];
 	var chordIndex = 0;
 	var playing = false;
-	var nextTime = 0;
+	var nextChordTime = 0;
+	var bpm = 160;
 
 	const piano = new Tone.Sampler({
 		urls: {
@@ -18,7 +19,9 @@ musicEngine = function() {
 	}).toDestination();
 
 	this.update = function() {
-		if (playing && performance.now() >= nextTime) {
+		if (!playing) return;
+
+		if (performance.now() >= nextChordTime) {
 			if (chordIndex < progression.length) {
 				playNextChord();
 			} else {
@@ -33,6 +36,8 @@ musicEngine = function() {
 		progression = chordProgression;
 		chordIndex = 0;
 		playing = true;
+
+		nextChordTime = performance.now()
 		playNextChord();
 	}
 
@@ -46,7 +51,7 @@ musicEngine = function() {
 		playChord(chord, duration);
 	}
 
-	function playChord(chord, duration = 1.5) {
+	function playChord(chord, duration = 2.5) {
 		var noteList = []
 
 		var chordChroma = chord.getChroma();
@@ -75,9 +80,9 @@ musicEngine = function() {
 		//console.log(noteList);
 	}
 
-	function playNextChord(duration = 1.5) {
+	function playNextChord(duration = 2.5) {
 		playChord(progression[chordIndex], duration);
 		chordIndex++;
-		nextTime = performance.now() + 1500;
+		nextChordTime += 60000 / bpm * 4;
 	}
 }
