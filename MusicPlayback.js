@@ -1,11 +1,18 @@
 
 
 musicEngine = function() {
-	var progression = [];
-	var chordIndex = 0;
 	var playing = false;
-	var nextChordTime = 0;
 	var bpm = 160;
+
+	var progression = [];
+	var chordIndex = -1;
+	var nextChordTime = 0;
+
+	var noteRhythm = generateNoteRhythm(generateBeatGrid());
+	var noteIndex = 0;
+	var nextNoteTime = 0;
+	var noteTimeStep = 0;
+
 
 	const piano = new Tone.Sampler({
 		urls: {
@@ -19,9 +26,7 @@ musicEngine = function() {
 	}).toDestination();
 
 	this.update = function() {
-		if (!playing) return;
-
-		if (performance.now() >= nextChordTime) {
+		if (playing && performance.now() >= nextChordTime) {
 			if (chordIndex < progression.length) {
 				playNextChord();
 			} else {
@@ -30,15 +35,24 @@ musicEngine = function() {
 				playing = false;
 			}
 		}
+
+		if (playing && performance.now() >= nextNoteTime) {
+			playNextNote();
+		}
 	}
 
 	this.playProgression = function(chordProgression) {
-		progression = chordProgression;
-		chordIndex = 0;
 		playing = true;
 
-		nextChordTime = performance.now()
+		progression = chordProgression;
+		chordIndex = 0;
+		nextChordTime = performance.now();
 		playNextChord();
+
+		nextNoteTime = performance.now() + 0.7;
+		noteIndex = 0;
+		noteTimeStep = 0;
+		playNextNote();
 	}
 
 	this.stopPlayback = function() {
@@ -46,12 +60,12 @@ musicEngine = function() {
 		playing = false;
 	}
 
-	this.playChord = function(chord, duration = 4) {
+	this.playChord = function(chord, duration = 1.5) {
 		piano.releaseAll();
 		playChord(chord, duration);
 	}
 
-	function playChord(chord, duration = 2.5) {
+	function playChord(chord, duration = 1.5) {
 		var noteList = []
 
 		var chordChroma = chord.getChroma();
@@ -81,8 +95,30 @@ musicEngine = function() {
 	}
 
 	function playNextChord(duration = 2.5) {
-		playChord(progression[chordIndex], duration);
-		chordIndex++;
+		playChord(progression[chordIndex++], duration);
 		nextChordTime += 60000 / bpm * 4;
+	}
+
+	function playNextNote() {
+		var offset = Math.floor((Math.sin(noteTimeStep) + 1) * 6) % 12;
+		noteTimeStep += 0.3; 
+		var note = 1000;
+
+		var chordSoloChroma = QualitySoloScaleChroma[progression[chordIndex-1].quality];
+		chordSoloChroma = rotateString(chordSoloChroma, progression[chordIndex-1].root);
+		for (var i = 0; i < chordSoloChroma.length; i++) {
+			if (chordSoloChroma[i] == "1") {
+				if (Math.abs(offset - i) < Math.abs(offset - note)) {
+					note = i;
+				}
+			}
+		}
+		note = NoteNumber[note];
+		console.log (note)
+
+		piano.triggerAttackRelease(note + "5", 60000 / bpm);
+
+		nextNoteTime += 60000 / bpm /2 * noteRhythm[noteIndex++];
+		if (noteIndex >= noteRhythm.length) noteIndex = 0;
 	}
 }
