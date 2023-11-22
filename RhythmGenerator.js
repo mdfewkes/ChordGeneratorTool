@@ -1,6 +1,6 @@
 var eigthsPerMeasure = 8;
 var numberOfMeasuresPerGroove = 2;
-var numberOfMeasuresPerPhrase = 2; // 4;
+var numberOfMeasuresPerPhrase = 4;
 var oddsOfThree = 0.3;
 var oddsOfLongNote = 0.6;
 var rhythmTable = {

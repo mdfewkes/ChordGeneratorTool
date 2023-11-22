@@ -12,6 +12,7 @@ musicEngine = function() {
 	var noteIndex = 0;
 	var nextNoteTime = 0;
 	var noteTimeStep = 0;
+	var startingNote = Math.floor(Math.random() * 12);
 
 
 	const piano = new Tone.Sampler({
@@ -32,6 +33,7 @@ musicEngine = function() {
 			} else {
 				chordIndex = 0;
 				playNextChord(4);
+				playNextNote(true);
 				playing = false;
 			}
 		}
@@ -90,7 +92,7 @@ musicEngine = function() {
 		pianoSequence.loop = false;
 		pianoSequence.start();
 
-		//console.log(chord.getSymbol());
+		console.log("~ " + chord.getSymbol());
 		//console.log(noteList);
 	}
 
@@ -99,13 +101,26 @@ musicEngine = function() {
 		nextChordTime += 60000 / bpm * 4;
 	}
 
-	function playNextNote() {
-		var offset = Math.floor((Math.sin(noteTimeStep) + 1) * 6) % 12;
-		noteTimeStep += 0.3; 
+	function playNextNote(chordTone = false) {
+		var octave = 5;
+		var noiseOct1 = Math.floor(Math.sin(noteTimeStep * 0.7) * 6);
+		var noiseOct2 = Math.floor(Math.sin(noteTimeStep * 2.5) * 3);
+		var noiseOct3 = Math.floor(Math.sin(noteTimeStep * 1.5) * 1);
+		noteTimeStep += 0.3 * noteRhythm[noteIndex]; 
+		var offset = (noiseOct1 + noiseOct2 + noiseOct3) + startingNote;
+		while (offset > 12) {
+			offset -= 12;
+			octave += 1;
+		}
+		while (offset < 0) {
+			offset += 12;
+			octave -= 1;
+		}
 		var note = 1000;
 
 		var chordSoloChroma = QualitySoloScaleChroma[progression[chordIndex-1].quality];
 		chordSoloChroma = rotateString(chordSoloChroma, progression[chordIndex-1].root);
+		if (chordTone) chordSoloChroma = progression[chordIndex-1].getChordMask();
 		for (var i = 0; i < chordSoloChroma.length; i++) {
 			if (chordSoloChroma[i] == "1") {
 				if (Math.abs(offset - i) < Math.abs(offset - note)) {
@@ -114,9 +129,9 @@ musicEngine = function() {
 			}
 		}
 		note = NoteNumber[note];
-		console.log (note)
+		console.log (note + octave)
 
-		piano.triggerAttackRelease(note + "5", 60000 / bpm);
+		piano.triggerAttackRelease(note + octave, 60000 / bpm);
 
 		nextNoteTime += 60000 / bpm /2 * noteRhythm[noteIndex++];
 		if (noteIndex >= noteRhythm.length) noteIndex = 0;
