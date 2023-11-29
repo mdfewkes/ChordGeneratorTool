@@ -8,11 +8,13 @@ musicEngine = function() {
 	var chordIndex = -1;
 	var nextChordTime = 0;
 
-	var noteRhythm = generateNoteRhythm(generateBeatGrid());
+	var beatGrid = generateBeatGrid()
+	var noteRhythm = generateNoteRhythm(beatGrid);
 	var noteIndex = 0;
 	var nextNoteTime = 0;
-	var noteTimeStep = 0;
-	var startingNote = Math.floor(Math.random() * 12);
+	var noteTimeStep = Math.random() * Math.PI * 2;
+	var noteTimeStepSize = Math.random() * 0.2 + 0.2;
+	var startingNote = Math.floor(Math.random() * 12) - 3;
 
 
 	const piano = new Tone.Sampler({
@@ -51,7 +53,7 @@ musicEngine = function() {
 		nextChordTime = performance.now();
 		playNextChord();
 
-		nextNoteTime = performance.now() + 0.7;
+		nextNoteTime = performance.now() + 0.4;
 		noteIndex = 0;
 		noteTimeStep = 0;
 		playNextNote();
@@ -88,7 +90,7 @@ musicEngine = function() {
 
 		var pianoSequence = new Tone.Sequence(function(time, note) {
 			piano.triggerAttackRelease(note, duration);
-		}, noteList, 0.05);
+		}, noteList, 0.03);
 		pianoSequence.loop = false;
 		pianoSequence.start();
 
@@ -103,11 +105,12 @@ musicEngine = function() {
 
 	function playNextNote(chordTone = false) {
 		var octave = 5;
-		var noiseOct1 = Math.floor(Math.sin(noteTimeStep * 0.7) * 6);
-		var noiseOct2 = Math.floor(Math.sin(noteTimeStep * 2.5) * 3);
-		var noiseOct3 = Math.floor(Math.sin(noteTimeStep * 1.5) * 1);
-		noteTimeStep += 0.3 * noteRhythm[noteIndex]; 
-		var offset = (noiseOct1 + noiseOct2 + noiseOct3) + startingNote;
+		var noiseOct1 = Math.sin(noteTimeStep * 0.7) * 6;
+		var noiseOct2 = Math.sin(noteTimeStep * 1) * 3;
+		var noiseOct3 = Math.random() * 2 - 1;
+		noteTimeStep += noteTimeStepSize * noteRhythm[noteIndex]; 
+		
+		var offset = Math.round(noiseOct1 + noiseOct2 + noiseOct3) + startingNote;
 		while (offset > 12) {
 			offset -= 12;
 			octave += 1;
@@ -116,8 +119,8 @@ musicEngine = function() {
 			offset += 12;
 			octave -= 1;
 		}
-		var note = 1000;
 
+		var note = 1000;
 		var chordSoloChroma = QualitySoloScaleChroma[progression[chordIndex-1].quality];
 		chordSoloChroma = rotateString(chordSoloChroma, progression[chordIndex-1].root);
 		if (chordTone) chordSoloChroma = progression[chordIndex-1].getChordMask();
