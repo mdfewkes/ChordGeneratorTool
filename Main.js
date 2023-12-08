@@ -8,7 +8,7 @@ var mouseJustPressed = false;
 var mouseJustReleased = false;
 
 var generator = new ChordGenerator();
-var musicEngine = new musicEngine();
+var musicEngine = new musicEngine2();
 
 var ruleWindow = null;
 var chordWindow = null;
