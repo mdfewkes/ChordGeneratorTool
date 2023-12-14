@@ -190,7 +190,7 @@ musicEngine2 = function() {
 		pianoSequence.start();
 	}
 
-	function playNextChord(duration = 2.5) {
+	function playNextChord() {
 		chordIndex++;
 		nextChordTime += 60000 / bpm * 4;
 	}

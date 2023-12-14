@@ -11,7 +11,7 @@ var generator = new ChordGenerator();
 var musicEngine = new musicEngine2();
 
 var ruleWindow = null;
-var chordWindow = null;
+var outputWindow = null;
 
 function calculateMousePos(evt) {
 	var rect = canvas.getBoundingClientRect(),
@@ -55,10 +55,11 @@ window.onload = function() {
 	mainInterface = new UIMainInterface("ChordTool", canvas.width, canvas.height);
 
 	ruleWindow = mainInterface.addPart(new RuleBoxBox("The Box O Rules", 10, 10, 355, 580), true);
-	chordWindow = mainInterface.addPart(new ChordDisplayBox("Chord Display Box", 390, 10, 400, 580), true);
+	outputWindow = mainInterface.addPart(new OutputBox("Chord Display Box", 390, 10, 400, 580), true);
 
 	var testPanel = mainInterface.addPart(new UIElement("testpanel", 100, 100, 600, 300), false);
-	testPanel.addPart(new UIButton("testbutton1", 20, 20, 20, 20));
+	testPanel.addPart(new UIButton("testbutton1", 20, 20, 10, 10));
+	testPanel.addPart(new UIToggle("testtoggle1", 40, 20, 10, 10));
 	testPanel.addPart(new ChordDisplay("testchorddisplay", 60, 20, 200, 20));
 	testPanel.addPart(new ChordBox("testchordbox", 20, 60, 20, 20));
 	testPanel.addPart(new RuleBox("testruledisplay", 260, 60, 200, 20));
@@ -253,7 +254,7 @@ class ChordDisplay extends UIElement {
 
 		this.chord = new Chord();
 
-		this.lable = new UITextLabel("Chord Name", 50, 20, 0, 0, this);
+		this.lable = new UITextLabel("Chord Name", 50, 20, 0, 0);
 		this.addPart(this.lable);
 		this.lable.label = NoteNumber[this.chord.root] + " " + QualityDecode[this.chord.quality];
 		this.lable.textAlignment = "center";
@@ -273,29 +274,38 @@ class ChordDisplay extends UIElement {
 	}
 }
 
-class ChordDisplayBox extends UIElement {
+class OutputBox extends UIElement {
 	constructor(name, x, y, w, h) {
 		super(name, x, y, w, h);
 
 		this.chords = [];
 		this.spacing = 40;
 
-		this.genButton = new UIButton("Generate", 0, 0, 10, 10);
+		this.genButton = new UIButton("Generate", this.w/2-100, this.h-86, 200, 30);
 		this.addPart(this.genButton);
 		this.genButton.onClick = function() {
 			ruleWindow.sendRulesToGenerator();
 			this.parent.listChords();
 		}
+		this.genButton.label = this.genButton.addPart(new UITextLabel("text", 100, 20, 0, 0));
+		this.genButton.label.textAlignment = "center";
+		this.genButton.label.label = "Generate";
 
-		this.playbackButton = new UIButton("Playback", 10, 0, 10, 10);
+		this.playbackButton = new UIButton("Playback", this.w/2-100, this.h-46, 95, 30);
 		this.playbackButton.onClick = function() {
 			musicEngine.playProgression(this.parent.chords);
 		}
+		this.playbackButton.label = this.playbackButton.addPart(new UITextLabel("text", 48.5, 20, 0, 0));
+		this.playbackButton.label.textAlignment = "center";
+		this.playbackButton.label.label = "Play";
 
-		this.stopPlaybackButton = new UIButton("Stop Playback", 20, 0, 10, 10);
+		this.stopPlaybackButton = new UIButton("Stop Playback", this.w/2+5, this.h-46, 95, 30);
 		this.stopPlaybackButton.onClick = function() {
 			musicEngine.stopPlayback();
 		}
+		this.stopPlaybackButton.label = this.stopPlaybackButton.addPart(new UITextLabel("text", 48.5, 20, 0, 0));
+		this.stopPlaybackButton.label.textAlignment = "center";
+		this.stopPlaybackButton.label.label = "Stop";
 	}
 
 	listChords() {
