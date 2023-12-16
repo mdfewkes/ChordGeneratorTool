@@ -12,6 +12,8 @@ var musicEngine = new musicEngine2();
 
 var ruleWindow = null;
 var outputWindow = null;
+var chordmapWindow = null;
+var keyscaleWindow = null;
 
 function calculateMousePos(evt) {
 	var rect = canvas.getBoundingClientRect(),
@@ -54,8 +56,12 @@ window.onload = function() {
 
 	mainInterface = new UIMainInterface("ChordTool", canvas.width, canvas.height);
 
-	ruleWindow = mainInterface.addPart(new RuleBoxBox("The Box O Rules", 10, 10, 355, 580), true);
-	outputWindow = mainInterface.addPart(new OutputBox("Chord Display Box", 390, 10, 400, 580), true);
+	outputWindow = mainInterface.addPart(new OutputPanel("Output Box", 390, 10, 400, 580), true);
+	ruleWindow = mainInterface.addPart(new RuleBoxPanel("The Box O Rules", 200, 10, 355, 580), true);
+	chordmapWindow = mainInterface.addPart(new ChordBoxPanel("Chord Display Box", 10, 10, 250, 580), true);
+
+	chordmapWindow.setChords([new Chord(0,0),new Chord(7,0),new Chord(9,1),new Chord(5,0)]);
+	ruleWindow.setRules(chordmapWindow.getRules());
 
 	var testPanel = mainInterface.addPart(new UIElement("testpanel", 100, 100, 600, 300), false);
 	testPanel.addPart(new UIButton("testbutton1", 20, 20, 10, 10));
@@ -140,11 +146,11 @@ class RuleBox extends UIElement {
 	}
 }
 
-class RuleBoxBox extends UIElement {
+class RuleBoxPanel extends UIElement {
 	constructor(name, x, y, w, h) {
-		super(name, x, y, w, h);
+		super(name, x, y, 355, h);
 
-		this.scrollBox = this.addPart(new UIScrollBoxV("Rule Mask", 0, 0, w, h));
+		this.scrollBox = this.addPart(new UIScrollBoxV("Rule Mask", 0, 0, this.w, this.h));
 
 		this.ruleBoxes = [];
 
@@ -274,12 +280,13 @@ class ChordDisplay extends UIElement {
 	}
 }
 
-class OutputBox extends UIElement {
+class OutputPanel extends UIElement {
 	constructor(name, x, y, w, h) {
 		super(name, x, y, w, h);
 
 		this.chords = [];
 		this.spacing = 40;
+		this.looping = true;
 
 		this.genButton = new UIButton("Generate", this.w/2-100, this.h-86, 200, 30);
 		this.addPart(this.genButton);
@@ -306,12 +313,21 @@ class OutputBox extends UIElement {
 		this.stopPlaybackButton.label = this.stopPlaybackButton.addPart(new UITextLabel("text", 48.5, 20, 0, 0));
 		this.stopPlaybackButton.label.textAlignment = "center";
 		this.stopPlaybackButton.label.label = "Stop";
+
+		this.loopToggle = new UIToggle("Loop", this.w/2-100, this.h-116, 20, 20, this.looping);
+		this.addPart(this.loopToggle);
+		this.loopToggle.onClick = function() {
+			outputWindow.looping = this.toggle;
+		}
+		this.loopToggle.label = this.loopToggle.addPart(new UITextLabel("text", 25, 15, 0, 0));
+		this.loopToggle.label.textAlignment = "left";
+		this.loopToggle.label.label = "Loop";
 	}
 
 	listChords() {
 		this.parts.length = 0;
 		this.active.length = 0;
-		this.chords = generator.generateProgressionOfLength(8, true, new Chord());
+		this.chords = generator.generateProgressionOfLength(8, this.looping, new Chord());
 
 		for (var i = 0; i < this.chords.length; i++) {
 			var x = 6 + (i%4) * 96; //20
@@ -324,6 +340,7 @@ class OutputBox extends UIElement {
 		this.addPart(this.genButton);
 		this.addPart(this.playbackButton);
 		this.addPart(this.stopPlaybackButton);
+		this.addPart(this.loopToggle);
 	}
 }
 
@@ -362,8 +379,159 @@ class ChordBox extends UIElement {
 		return new Chord(NoteName[this.rootUI.list[this.rootUI.value]], this.qualityUI.value);
 	}
 
+	setChord(chord) {
+		this.rootUI.value = (chord.root - 12) *-1;
+		this.qualityUI = chord.quality;
+	}
+
 	resetChord() {
 		this.rootUI.value = 0;
 		this.qualityUI.value = 0;
+	}
+}
+
+class ChordBoxPanel extends UIElement {
+	constructor(name, x, y, w, h) {
+		super(name, x, y, 250, h);
+
+		this.scrollBox = this.addPart(new UIScrollBoxV("Chord Mask", 0, 0, this.w, this.h));
+
+		this.chordBoxes = [];
+		this.looping = true;
+
+		var addButton = new UIButtonWToolTip("Add Chord", 0, 0, 10, 10);
+		this.addPart(addButton);
+		addButton.toolTip = "Add chord";
+		addButton.onClick = function() {
+			this.parent.addChord();
+		}
+
+		var rmButton = new UIButtonWToolTip("Remove Chord", 10, 0, 10, 10);
+		this.addPart(rmButton);
+		rmButton.toolTip = "Remove chord";
+		rmButton.onClick = function() {
+			this.parent.removeChord();
+		}
+
+		var ppButton = new UIButtonWToolTip("Process Progression", 20, 0, 10, 10);
+		this.addPart(ppButton);
+		ppButton.toolTip = "Process Progression";
+		ppButton.onClick = function() {
+			var rules = this.parent.getRules();
+			ruleWindow.setRules(rules);
+			outputWindow.looping = this.parent.looping;
+		}
+
+		var lpButton = new UIToggleWToolTip("Loop Toggle", 30, 0, 10, 10, this.looping);
+		this.addPart(lpButton);
+		lpButton.toolTip = "Loop?";
+		lpButton.onClick = function() {
+			this.parent.looping = this.toggle;
+		}
+	}
+
+	onUpdate() {
+		this.scrollBox.setLeastActive();
+	}
+
+	addChord(chord = null) {
+		var newChord = new ChordBox("New Chord", 9, 9 - borderSize + this.chordBoxes.length * 68);
+		this.scrollBox.addPart(newChord);
+		this.chordBoxes.push(newChord);
+
+		if (chord != null) newChord.setChord(chord);
+
+		var closeUI = new UIButtonWToolTip("Close ChordBox", 315, 0, 10, 10);
+		newChord.addPart(closeUI);
+		closeUI.toolTip = "Remove chord";
+		closeUI.textAlignment = "end";
+		closeUI.chordBox = newChord;
+		closeUI.chordBoxBox = this;
+		closeUI.onClick = function() {
+			this.chordBoxBox.removeChord(this.chordBox);
+		}
+
+
+		this.placeChords();
+	}
+
+	removeChord(chord = null) {
+		if (chord == null) {
+			chord = this.chordBoxes[this.chordBoxes.length-1];
+		}
+
+		this.removePart(chord);
+		var chordIndex = this.chordBoxes.indexOf(chord);
+		if (chordIndex < 0) return;
+
+		this.chordBoxes[chordIndex].setActive(false);
+		this.chordBoxes.splice(chordIndex, 1);
+
+		this.placeChords();
+	}
+
+	setChords(newChords) {
+		this.clearChords();
+		for (var i = 0; i < newChords.length; i++) {
+			this.addChord(newChords[i]);
+		}
+	}
+
+	addChords(newChords) {
+		for (var i = 0; i < newChords.length; i++) {
+			this.addChord(newChords[i]);
+		}
+	}
+
+	getChords() {
+		var newChords = []
+		for (var i = 0; i < this.chordBoxes.length; i++) {
+			newChords.push(this.chordBoxes[i].getChord());
+		}
+
+		return newChords;
+	}
+
+	clearChords() {
+		for (var i = this.chordBoxes.length; i > 0; i--) {
+			this.removeChord();
+		}
+	}
+
+	placeChords() {
+		for (var i = 0; i < this.chordBoxes.length; i++) {
+			this.chordBoxes[i].name = "Chord " + i;
+			this.chordBoxes[i].updatePosition(9, 9 - borderSize + i * 68);
+		}
+
+		this.scrollBox.scrollBox.findMaxOffset();
+		this.scrollBox.scrollBox.validateScrollPosition();
+	}
+
+	getRules() {
+		if(this.chordBoxes.length <= 1) return [];
+
+		var rules = [];
+		for (var i = 1; i < this.chordBoxes.length; i++) {
+			var chord1 = this.chordBoxes[i-1].getChord();
+			var chord2 = this.chordBoxes[i].getChord();
+			rules.push(this.interpolateRule(chord1, chord2));
+		}
+		if (this.looping) {
+			var chord1 = this.chordBoxes[this.chordBoxes.length-1].getChord();
+			var chord2 = this.chordBoxes[0].getChord();
+			rules.push(this.interpolateRule(chord1, chord2));
+		}
+
+		outputWindow.looping = this.looping;
+		return rules;
+	}
+
+	interpolateRule(chord1, chord2) {
+		var rootMotion = chord2.root - chord1.root;
+		var startingQuality = chord1.quality;
+		var endingQuality = chord2.quality;
+
+		return new Rule(rootMotion, startingQuality, endingQuality);
 	}
 }

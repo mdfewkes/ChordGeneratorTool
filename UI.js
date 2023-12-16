@@ -722,10 +722,10 @@ class UIButtonWToolTip extends UIButton {
 }
 
 class UIToggle extends UIButton {
-	constructor(name, x, y, w, h) {
+	constructor(name, x, y, w, h, initialState = false) {
 		super(name, x, y, w, h);
 
-		this.toggle = false;
+		this.toggle = initialState;
 	}
 
 	onDraw() {
@@ -751,8 +751,8 @@ class UIToggle extends UIButton {
 }
 
 class UIToggleWToolTip extends UIToggle {
-	constructor(name, x, y, w, h, tipText = "") {
-		super(name, x, y, w, h);
+	constructor(name, x, y, w, h, initialState = false, tipText = "") {
+		super(name, x, y, w, h, initialState);
 
 		this.toolTip = tipText;
 		this.textAlignment = "start";
@@ -884,6 +884,10 @@ class UIDropdown extends UIElement {
 		this.dropdown.setActive(true);
 		this.open = true;
 		this.dropdown.justOpened = true;
+	}
+
+	getItem() {
+		return this.list[this.value];
 	}
 }
 

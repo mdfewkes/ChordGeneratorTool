@@ -120,7 +120,7 @@ musicEngine2 = function() {
 				playNextChord();
 			} else {
 				chordIndex = 0;
-				playNextChord(4);
+				playNextChord();
 				playNextNote(true);
 				playNextAcc();
 				playing = false;
@@ -199,11 +199,11 @@ musicEngine2 = function() {
 		var octave = 5;
 		var noiseOct1 = triGen(noteTimeStep * 2) * 9;
 		var noiseOct2 = sinGen(noteTimeStep * 6) * 3;
-		var noiseOct3 = nosGen() * 1.5;
+		var noiseOct3 = nosGen() * 1;
 		noteTimeStep += noteTimeStepSize * noteRhythm[noteIndex]; 
 		
 		var offset = Math.round(noiseOct1 + noiseOct2 + noiseOct3) + startingNote;
-		console.log(offset);
+		//console.log(offset);
 		while (offset > 12) {
 			offset -= 12;
 			octave += 1;

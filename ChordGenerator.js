@@ -264,7 +264,7 @@ function ChordGenerator() {
 	var loopProgression = false;
 	var forgivingOutput = false;
 	var progression = [];
-	var rules = testRules4;
+	var rules = testRules;
 
 	var failsafeRules = []
 	for (var i = 0; i < QualityCount; i++) {
