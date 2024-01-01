@@ -828,11 +828,11 @@ class UITextLabel extends UIElement {
 }
 
 class UIDropdown extends UIElement {
-	constructor(name, x, y, w, h) {
+	constructor(name, x, y, w, h, list = []) {
 		super(name, x, y, w, h);
 
 		this.value = 0;
-		this.list = [];
+		this.list = list;
 		this.size = 14;
 		this.center = false;
 		this.textAlignment = "center";
