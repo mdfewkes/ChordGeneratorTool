@@ -58,8 +58,8 @@ window.onload = function() {
 
 	ruleWindow = mainInterface.addPart(new RuleBoxPanel("The Box O Rules", 200, 10, 355, 580, generator), true);
 	outputWindow = mainInterface.addPart(new OutputPanel("Output Box", 390, 10, 400, 580, ruleWindow, musicEngine), true);
-	chordmapWindow = mainInterface.addPart(new ChordBoxPanel("Chord Display Box", 10, 10, 250, 580, outputWindow), false);
-	keyscaleWindow = mainInterface.addPart(new KeyScalePanel("KeyScale", 10, 10, 400, 580, outputWindow), true);
+	chordmapWindow = mainInterface.addPart(new ChordBoxPanel("Chord Display Box", 10, 10, 250, 580, outputWindow), true);
+	keyscaleWindow = mainInterface.addPart(new KeyScalePanel("KeyScale", 10, 10, 400, 580, outputWindow), false);
 
 	chordmapWindow.setChords([new Chord(0,0),new Chord(7,0),new Chord(9,1),new Chord(5,0)]);
 	ruleWindow.setRules(chordmapWindow.getRules());
@@ -399,7 +399,7 @@ class ChordBox extends UIElement {
 
 	setChord(chord) {
 		this.rootUI.value = (chord.root - 12) *-1;
-		this.qualityUI = chord.quality;
+		this.qualityUI.value = chord.quality;
 	}
 
 	resetChord() {
