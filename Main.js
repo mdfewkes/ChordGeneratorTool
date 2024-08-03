@@ -376,7 +376,7 @@ class ChordBox extends UIElement {
 
 		this.rootUI = new UIDropdown("RootMotion Dropdown", 20, 30, 75, 20);
 		this.addPart(this.rootUI);
-		this.rootUI.onValueChanged = function() {
+		this.rootUI.onValueChange = function() {
 			this.parent.onChordChange();
 		};
 		this.rootUI.list = rootUIListCommon;
@@ -386,7 +386,7 @@ class ChordBox extends UIElement {
 
 		this.qualityUI = new UIDropdown("Quality Dropdown", 105, 30, 95, 20);
 		this.addPart(this.qualityUI);
-		this.qualityUI.onValueChanged = function() {
+		this.qualityUI.onValueChange = function() {
 			this.parent.onChordChange();
 		};
 		this.qualityUI.list = ["Major", "Minor", "Diminished", "Augmented"];

@@ -906,7 +906,7 @@ class UIDropdownList extends UIElement {
 				this.parent.value = this.quantizeMousePositionY();
 				mouseJustPressed = false;
 				mouseJustReleased = true;
-				this.parent.onValueChanged();
+				this.parent.onValueChange();
 			}
 			this.parent.closeList();
 			return;
