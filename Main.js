@@ -569,72 +569,108 @@ class KeyScalePanel extends UIElement {
 
 		this.interval0Toggle = new UIToggle("interval 0 toggle", 15, 20, 10, 10, true);
 		this.addPart(this.interval0Toggle);
+		this.interval0Toggle.onClick = function() {
+			this.parent.applyKeyScale();
+		};
 		this.interval0Toggle.label = this.interval0Toggle.addPart(new UITextLabel("text", 10, 10, 0, 0));
 		this.interval0Toggle.label.textAlignment = "left";
 		this.interval0Toggle.label.label = "U";
 
 		this.interval1Toggle = new UIToggle("interval 1 toggle", 50, 20, 10, 10, false);
 		this.addPart(this.interval1Toggle);
+		this.interval1Toggle.onClick = function() {
+			this.parent.applyKeyScale();
+		};
 		this.interval1Toggle.label = this.interval1Toggle.addPart(new UITextLabel("text", 10, 10, 0, 0));
 		this.interval1Toggle.label.textAlignment = "left";
 		this.interval1Toggle.label.label = "m2";
 
 		this.interval2Toggle = new UIToggle("interval 2 toggle", 85, 20, 10, 10, true);
 		this.addPart(this.interval2Toggle);
+		this.interval2Toggle.onClick = function() {
+			this.parent.applyKeyScale();
+		};
 		this.interval2Toggle.label = this.interval2Toggle.addPart(new UITextLabel("text", 10, 10, 0, 0));
 		this.interval2Toggle.label.textAlignment = "left";
 		this.interval2Toggle.label.label = "M2";
 
 		this.interval3Toggle = new UIToggle("interval 3 toggle", 120, 20, 10, 10, false);
 		this.addPart(this.interval3Toggle);
+		this.interval3Toggle.onClick = function() {
+			this.parent.applyKeyScale();
+		};
 		this.interval3Toggle.label = this.interval3Toggle.addPart(new UITextLabel("text", 10, 10, 0, 0));
 		this.interval3Toggle.label.textAlignment = "left";
 		this.interval3Toggle.label.label = "m3";
 
 		this.interval4Toggle = new UIToggle("interval 4 toggle", 155, 20, 10, 10, true);
 		this.addPart(this.interval4Toggle);
+		this.interval4Toggle.onClick = function() {
+			this.parent.applyKeyScale();
+		};
 		this.interval4Toggle.label = this.interval4Toggle.addPart(new UITextLabel("text", 10, 10, 0, 0));
 		this.interval4Toggle.label.textAlignment = "left";
 		this.interval4Toggle.label.label = "M3";
 
 		this.interval5Toggle = new UIToggle("interval 5 toggle", 190, 20, 10, 10, true);
 		this.addPart(this.interval5Toggle);
+		this.interval5Toggle.onClick = function() {
+			this.parent.applyKeyScale();
+		};
 		this.interval5Toggle.label = this.interval5Toggle.addPart(new UITextLabel("text", 10, 10, 0, 0));
 		this.interval5Toggle.label.textAlignment = "left";
 		this.interval5Toggle.label.label = "P4";
 
 		this.interval6Toggle = new UIToggle("interval 6 toggle", 15, 40, 10, 10, false);
 		this.addPart(this.interval6Toggle);
+		this.interval6Toggle.onClick = function() {
+			this.parent.applyKeyScale();
+		};
 		this.interval6Toggle.label = this.interval6Toggle.addPart(new UITextLabel("text", 10, 10, 0, 0));
 		this.interval6Toggle.label.textAlignment = "left";
 		this.interval6Toggle.label.label = "T";
 
 		this.interval7Toggle = new UIToggle("interval 7 toggle", 50, 40, 10, 10, true);
 		this.addPart(this.interval7Toggle);
+		this.interval7Toggle.onClick = function() {
+			this.parent.applyKeyScale();
+		};
 		this.interval7Toggle.label = this.interval7Toggle.addPart(new UITextLabel("text", 10, 10, 0, 0));
 		this.interval7Toggle.label.textAlignment = "left";
 		this.interval7Toggle.label.label = "P5";
 
 		this.interval8Toggle = new UIToggle("interval 8 toggle", 85, 40, 10, 10, false);
 		this.addPart(this.interval8Toggle);
+		this.interval8Toggle.onClick = function() {
+			this.parent.applyKeyScale();
+		};
 		this.interval8Toggle.label = this.interval8Toggle.addPart(new UITextLabel("text", 10, 10, 0, 0));
 		this.interval8Toggle.label.textAlignment = "left";
 		this.interval8Toggle.label.label = "m6";
 
 		this.interval9Toggle = new UIToggle("interval 9 toggle", 120, 40, 10, 10, true);
 		this.addPart(this.interval9Toggle);
+		this.interval9Toggle.onClick = function() {
+			this.parent.applyKeyScale();
+		};
 		this.interval9Toggle.label = this.interval9Toggle.addPart(new UITextLabel("text", 10, 10, 0, 0));
 		this.interval9Toggle.label.textAlignment = "left";
 		this.interval9Toggle.label.label = "M6";
 
 		this.interval10Toggle = new UIToggle("interval 10 toggle", 155, 40, 10, 10, false);
 		this.addPart(this.interval10Toggle);
+		this.interval10Toggle.onClick = function() {
+			this.parent.applyKeyScale();
+		};
 		this.interval10Toggle.label = this.interval10Toggle.addPart(new UITextLabel("text", 10, 10, 0, 0));
 		this.interval10Toggle.label.textAlignment = "left";
 		this.interval10Toggle.label.label = "m7";
 
 		this.interval11Toggle = new UIToggle("interval 11 toggle", 190, 40, 10, 10, true);
 		this.addPart(this.interval11Toggle);
+		this.interval11Toggle.onClick = function() {
+			this.parent.applyKeyScale();
+		};
 		this.interval11Toggle.label = this.interval11Toggle.addPart(new UITextLabel("text", 10, 10, 0, 0));
 		this.interval11Toggle.label.textAlignment = "left";
 		this.interval11Toggle.label.label = "M7";
@@ -643,12 +679,18 @@ class KeyScalePanel extends UIElement {
 		this.divergenceDropdown = new UIDropdown("divergence", 15, 60, 30, 20, [0,1,2,3]);
 		this.divergenceDropdown.value = 1;
 		this.addPart(this.divergenceDropdown);
+		this.divergenceDropdown.onValueChange = function() {
+			this.parent.applyKeyScale();
+		};
 		var divergenceDropdownlabel = this.addPart(new UITextLabel("text", 55, 75, 0, 0));
 		divergenceDropdownlabel.textAlignment = "left";
 		divergenceDropdownlabel.label = "Divergence";
 
 		this.rootDropdown = new UIDropdown("divergence", 15, 90, 30, 20, rootUIListCommon);
 		this.addPart(this.rootDropdown);
+		this.rootDropdown.onValueChange = function() {
+			this.parent.applyKeyScale();
+		};
 		var rootDropdownlabel = this.addPart(new UITextLabel("text", 55, 105, 0, 0));
 		rootDropdownlabel.textAlignment = "left";
 		rootDropdownlabel.label = "Root";
@@ -656,18 +698,13 @@ class KeyScalePanel extends UIElement {
 
 		this.startingChord = new ChordBox("starting chord", 10, 410, 0, 0);
 		this.addPart(this.startingChord);
+		this.startingChord.onChordChange = function() {
+			this.parent.applyKeyScale();
+		};
 		this.startingChordToggle = new UIToggle("stating chord toggle", 15, 395, 10, 10, true);
 		this.addPart(this.startingChordToggle);
-		this.startingChord.onChordChange = function() {
-			if (this.parent.startingChordToggle.toggle) {
-				this.parent.outputWindowRef.firstChord = this.getChord();
-			}
-		};
-		this.startingChordToggle.onTrue = function() {
-			this.parent.outputWindowRef.firstChord = this.parent.startingChord.getChord();
-		};
-		this.startingChordToggle.onFalse = function() {
-			this.parent.outputWindowRef.firstChord = false;
+		this.startingChordToggle.onClick = function() {
+			this.parent.applyKeyScale();
 		};
 		this.startingChordToggle.label = this.startingChordToggle.addPart(new UITextLabel("text", 20, 10, 0, 0));
 		this.startingChordToggle.label.textAlignment = "left";
@@ -675,28 +712,17 @@ class KeyScalePanel extends UIElement {
 
 		this.endingChord = new ChordBox("ending chord", 10, 510, 0, 0);
 		this.addPart(this.endingChord);
+		this.endingChord.onChordChange = function() {
+			this.parent.applyKeyScale();
+		};
 		this.endingChordToggle = new UIToggle("ending chord toggle", 15, 495, 10, 10, false);
 		this.addPart(this.endingChordToggle);
-		this.endingChord.onChordChange = function() {
-			if (this.parent.endingChordToggle.toggle) {
-				this.parent.outputWindowRef.lastChord = this.getChord();
-			}
-		};
-		this.endingChordToggle.onTrue = function() {
-			this.parent.outputWindowRef.lastChord = this.parent.endingChord.getChord();
-		};
-		this.endingChordToggle.onFalse = function() {
-			this.parent.outputWindowRef.lastChord = false;
+		this.endingChordToggle.onClick = function() {
+			this.parent.applyKeyScale();
 		};
 		this.endingChordToggle.label = this.endingChordToggle.addPart(new UITextLabel("text", 20, 10, 0, 0));
 		this.endingChordToggle.label.textAlignment = "left";
 		this.endingChordToggle.label.label = "Last Chord";
-
-		this.applyButton = new UIButtonWToolTip("Apply Button", 0, 0, 10, 10, "Apply");
-		this.addPart (this.applyButton);
-		this.applyButton.onClick = function() {
-			this.parent.applyKeyScale();
-		};
 	}
 
 	applyKeyScale() {
