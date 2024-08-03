@@ -15,9 +15,6 @@ var outputWindow = null;
 var chordmapWindow = null;
 var keyscaleWindow = null;
 
-var firstChord = new Chord();
-var lastChord = 0;
-
 function calculateMousePos(evt) {
 	var rect = canvas.getBoundingClientRect(),
 	root = document.documentElement;
@@ -59,10 +56,10 @@ window.onload = function() {
 
 	mainInterface = new UIMainInterface("ChordTool", canvas.width, canvas.height);
 
-	outputWindow = mainInterface.addPart(new OutputPanel("Output Box", 390, 10, 400, 580), true);
-	ruleWindow = mainInterface.addPart(new RuleBoxPanel("The Box O Rules", 200, 10, 355, 580), true);
-	chordmapWindow = mainInterface.addPart(new ChordBoxPanel("Chord Display Box", 10, 10, 250, 580), false);
-	keyscaleWindow = mainInterface.addPart(new KeyScalePanel("KeyScale", 10, 10, 400, 580), true);
+	ruleWindow = mainInterface.addPart(new RuleBoxPanel("The Box O Rules", 200, 10, 355, 580, generator), true);
+	outputWindow = mainInterface.addPart(new OutputPanel("Output Box", 390, 10, 400, 580, ruleWindow, musicEngine), true);
+	chordmapWindow = mainInterface.addPart(new ChordBoxPanel("Chord Display Box", 10, 10, 250, 580, outputWindow), false);
+	keyscaleWindow = mainInterface.addPart(new KeyScalePanel("KeyScale", 10, 10, 400, 580, outputWindow), true);
 
 	chordmapWindow.setChords([new Chord(0,0),new Chord(7,0),new Chord(9,1),new Chord(5,0)]);
 	ruleWindow.setRules(chordmapWindow.getRules());
@@ -151,8 +148,10 @@ class RuleBox extends UIElement {
 }
 
 class RuleBoxPanel extends UIElement {
-	constructor(name, x, y, w, h) {
+	constructor(name, x, y, w, h, generatorRef) {
 		super(name, x, y, 355, h);
+
+		this.generatorRef = generatorRef;
 
 		this.scrollBox = this.addPart(new UIScrollBoxV("Rule Mask", 0, 0, this.w, this.h));
 
@@ -172,7 +171,7 @@ class RuleBoxPanel extends UIElement {
 			this.parent.removeRule();
 		}
 
-		this.setRules(generator.getRules());
+		this.setRules(this.generatorRef.getRules());
 	}
 
 	onUpdate() {
@@ -254,7 +253,7 @@ class RuleBoxPanel extends UIElement {
 	}
 
 	sendRulesToGenerator() {
-		generator.setRules(this.getRules());
+		this.generatorRef.setRules(this.getRules());
 	}
 }
 
@@ -285,8 +284,14 @@ class ChordDisplay extends UIElement {
 }
 
 class OutputPanel extends UIElement {
-	constructor(name, x, y, w, h) {
+	constructor(name, x, y, w, h, ruleWindowRef, musicEngineRef) {
 		super(name, x, y, w, h);
+
+		this.ruleWindowRef = ruleWindowRef;
+		this.generatorRef = ruleWindowRef.generatorRef;
+		this.musicEngineRef = musicEngineRef;
+		this.firstChord = new Chord();;
+		this.lastChord = 0;
 
 		this.chords = [];
 		this.spacing = 40;
@@ -294,8 +299,9 @@ class OutputPanel extends UIElement {
 
 		this.genButton = new UIButton("Generate", this.w/2-100, this.h-86, 200, 30);
 		this.addPart(this.genButton);
+		this.genButton.ruleWindowRef = this.ruleWindowRef;
 		this.genButton.onClick = function() {
-			ruleWindow.sendRulesToGenerator();
+			this.ruleWindowRef.sendRulesToGenerator();
 			this.parent.listChords();
 		}
 		this.genButton.label = this.genButton.addPart(new UITextLabel("text", 100, 20, 0, 0));
@@ -303,16 +309,18 @@ class OutputPanel extends UIElement {
 		this.genButton.label.label = "Generate";
 
 		this.playbackButton = new UIButton("Playback", this.w/2-100, this.h-46, 95, 30);
+		this.playbackButton.musicEngineRef = this.musicEngineRef;
 		this.playbackButton.onClick = function() {
-			musicEngine.playProgression(this.parent.chords);
+			this.musicEngineRef.playProgression(this.parent.chords);
 		}
 		this.playbackButton.label = this.playbackButton.addPart(new UITextLabel("text", 48.5, 20, 0, 0));
 		this.playbackButton.label.textAlignment = "center";
 		this.playbackButton.label.label = "Play";
 
 		this.stopPlaybackButton = new UIButton("Stop Playback", this.w/2+5, this.h-46, 95, 30);
+		this.stopPlaybackButton.musicEngineRef = this.musicEngineRef;
 		this.stopPlaybackButton.onClick = function() {
-			musicEngine.stopPlayback();
+			this.musicEngineRef.stopPlayback();
 		}
 		this.stopPlaybackButton.label = this.stopPlaybackButton.addPart(new UITextLabel("text", 48.5, 20, 0, 0));
 		this.stopPlaybackButton.label.textAlignment = "center";
@@ -321,7 +329,7 @@ class OutputPanel extends UIElement {
 		this.loopToggle = new UIToggle("Loop", this.w/2-100, this.h-116, 20, 20, this.looping);
 		this.addPart(this.loopToggle);
 		this.loopToggle.onClick = function() {
-			outputWindow.looping = this.toggle;
+			this.parent.looping = this.toggle;
 		}
 		this.loopToggle.label = this.loopToggle.addPart(new UITextLabel("text", 25, 15, 0, 0));
 		this.loopToggle.label.textAlignment = "left";
@@ -331,7 +339,7 @@ class OutputPanel extends UIElement {
 	listChords() {
 		this.parts.length = 0;
 		this.active.length = 0;
-		this.chords = generator.generateProgressionOfLength(8, this.looping, firstChord, lastChord);
+		this.chords = this.generatorRef.generateProgressionOfLength(8, this.looping, this.firstChord, this.lastChord);
 
 		for (var i = 0; i < this.chords.length; i++) {
 			var x = 6 + (i%4) * 96; //20
@@ -368,6 +376,9 @@ class ChordBox extends UIElement {
 
 		this.rootUI = new UIDropdown("RootMotion Dropdown", 20, 30, 75, 20);
 		this.addPart(this.rootUI);
+		this.rootUI.onValueChanged = function() {
+			this.parent.onChordChange();
+		};
 		this.rootUI.list = rootUIListCommon;
 		this.rootUI.value = 12;
 		this.rootUI.center = true;
@@ -375,6 +386,9 @@ class ChordBox extends UIElement {
 
 		this.qualityUI = new UIDropdown("Quality Dropdown", 105, 30, 95, 20);
 		this.addPart(this.qualityUI);
+		this.qualityUI.onValueChanged = function() {
+			this.parent.onChordChange();
+		};
 		this.qualityUI.list = ["Major", "Minor", "Diminished", "Augmented"];
 		this.qualityUI.updateListElement();
 	}
@@ -392,11 +406,16 @@ class ChordBox extends UIElement {
 		this.rootUI.value = 0;
 		this.qualityUI.value = 0;
 	}
+
+	onChordChange() {};
 }
 
 class ChordBoxPanel extends UIElement {
-	constructor(name, x, y, w, h) {
+	constructor(name, x, y, w, h, outputWindowRef) {
 		super(name, x, y, 250, h);
+
+		this.outputWindowRef = outputWindowRef;
+		this.ruleWindowRef = outputWindowRef.ruleWindowRef;
 
 		this.scrollBox = this.addPart(new UIScrollBoxV("Chord Mask", 0, 0, this.w, this.h));
 
@@ -420,10 +439,12 @@ class ChordBoxPanel extends UIElement {
 		var ppButton = new UIButtonWToolTip("Process Progression", 20, 0, 10, 10);
 		this.addPart(ppButton);
 		ppButton.toolTip = "Process Progression";
+		ppButton.ruleWindowRef = this.ruleWindowRef;
+		ppButton.outputWindowRef = this.outputWindowRef;
 		ppButton.onClick = function() {
 			var rules = this.parent.getRules();
-			ruleWindow.setRules(rules);
-			outputWindow.looping = this.parent.looping;
+			this.ruleWindowRef.setRules(rules);
+			this.outputWindowRef.looping = this.parent.looping;
 		}
 
 		var lpButton = new UIToggleWToolTip("Loop Toggle", 30, 0, 10, 10, this.looping);
@@ -454,7 +475,6 @@ class ChordBoxPanel extends UIElement {
 		closeUI.onClick = function() {
 			this.chordBoxBox.removeChord(this.chordBox);
 		}
-
 
 		this.placeChords();
 	}
@@ -541,9 +561,11 @@ class ChordBoxPanel extends UIElement {
 }
 
 class KeyScalePanel extends UIElement {
-	constructor(name, x, y, w, h) {
+	constructor(name, x, y, w, h, outputWindowRef) {
 		super(name, x, y, 240, 580);
 
+		this.outputWindowRef = outputWindowRef;
+		this.generatorRef = outputWindowRef.generatorRef;
 
 		this.interval0Toggle = new UIToggle("interval 0 toggle", 15, 20, 10, 10, true);
 		this.addPart(this.interval0Toggle);
@@ -636,6 +658,17 @@ class KeyScalePanel extends UIElement {
 		this.addPart(this.startingChord);
 		this.startingChordToggle = new UIToggle("stating chord toggle", 15, 395, 10, 10, true);
 		this.addPart(this.startingChordToggle);
+		this.startingChord.onChordChange = function() {
+			if (this.parent.startingChordToggle.toggle) {
+				this.parent.outputWindowRef.firstChord = this.getChord();
+			}
+		};
+		this.startingChordToggle.onTrue = function() {
+			this.parent.outputWindowRef.firstChord = this.parent.startingChord.getChord();
+		};
+		this.startingChordToggle.onFalse = function() {
+			this.parent.outputWindowRef.firstChord = false;
+		};
 		this.startingChordToggle.label = this.startingChordToggle.addPart(new UITextLabel("text", 20, 10, 0, 0));
 		this.startingChordToggle.label.textAlignment = "left";
 		this.startingChordToggle.label.label = "First Chord";
@@ -644,6 +677,17 @@ class KeyScalePanel extends UIElement {
 		this.addPart(this.endingChord);
 		this.endingChordToggle = new UIToggle("ending chord toggle", 15, 495, 10, 10, false);
 		this.addPart(this.endingChordToggle);
+		this.endingChord.onChordChange = function() {
+			if (this.parent.endingChordToggle.toggle) {
+				this.parent.outputWindowRef.lastChord = this.getChord();
+			}
+		};
+		this.endingChordToggle.onTrue = function() {
+			this.parent.outputWindowRef.lastChord = this.parent.endingChord.getChord();
+		};
+		this.endingChordToggle.onFalse = function() {
+			this.parent.outputWindowRef.lastChord = false;
+		};
 		this.endingChordToggle.label = this.endingChordToggle.addPart(new UITextLabel("text", 20, 10, 0, 0));
 		this.endingChordToggle.label.textAlignment = "left";
 		this.endingChordToggle.label.label = "Last Chord";
@@ -652,7 +696,7 @@ class KeyScalePanel extends UIElement {
 		this.addPart (this.applyButton);
 		this.applyButton.onClick = function() {
 			this.parent.applyKeyScale();
-		}
+		};
 	}
 
 	applyKeyScale() {
@@ -670,18 +714,18 @@ class KeyScalePanel extends UIElement {
 		chroma += this.interval10Toggle.toggle ? "1" : "0";
 		chroma += this.interval11Toggle.toggle ? "1" : "0";
 
-		generator.setChroma(chroma, NoteName[this.rootDropdown.getItem()], this.divergenceDropdown.value);
+		this.generatorRef.setChroma(chroma, NoteName[this.rootDropdown.getItem()], this.divergenceDropdown.value);
 
 		if (this.startingChordToggle.toggle) {
-			firstChord = this.startingChord.getChord();
+			this.outputWindowRef.firstChord = this.startingChord.getChord();
 		} else {
-			firstChord = 0;
+			this.outputWindowRef.firstChord = 0;
 		}
 
 		if (this.endingChordToggle.toggle) {
-			lastChord = this.endingChord.getChord();
+			this.outputWindowRef.lastChord = this.endingChord.getChord();
 		} else {
-			lastChord = 0;
+			this.outputWindowRef.lastChord = 0;
 		}
 	}
 }

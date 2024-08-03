@@ -889,6 +889,8 @@ class UIDropdown extends UIElement {
 	getItem() {
 		return this.list[this.value];
 	}
+
+	onValueChange() {}
 }
 
 class UIDropdownList extends UIElement {
@@ -904,6 +906,7 @@ class UIDropdownList extends UIElement {
 				this.parent.value = this.quantizeMousePositionY();
 				mouseJustPressed = false;
 				mouseJustReleased = true;
+				this.parent.onValueChanged();
 			}
 			this.parent.closeList();
 			return;
