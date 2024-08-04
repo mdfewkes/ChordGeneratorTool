@@ -302,7 +302,6 @@ class OutputPanel extends UIElement {
 
 		this.chords = [];
 		this.spacing = 40;
-		this.looping = true;
 
 		this.genButton = new UIButton("Generate", this.w/2-100, this.h-86, 200, 30);
 		this.addPart(this.genButton);
@@ -333,14 +332,19 @@ class OutputPanel extends UIElement {
 		this.stopPlaybackButton.label.textAlignment = "center";
 		this.stopPlaybackButton.label.label = "Stop";
 
-		this.loopToggle = new UIToggle("Loop", this.w/2-100, this.h-116, 20, 20, this.looping);
+		this.loopToggle = new UIToggle("Loop", this.w/2-100, this.h-116, 20, 20, this.generatorSettingsRef.looping);
 		this.addPart(this.loopToggle);
+		this.loopToggle.generatorSettingsRef = this.generatorSettingsRef;
 		this.loopToggle.onClick = function() {
-			this.parent.looping = this.toggle;
+			this.generatorSettingsRef.looping = this.toggle;
 		}
 		this.loopToggle.label = this.loopToggle.addPart(new UITextLabel("text", 25, 15, 0, 0));
 		this.loopToggle.label.textAlignment = "left";
 		this.loopToggle.label.label = "Loop";
+	}
+
+	onUpdate() {
+		this.loopToggle.toggle = this.generatorSettingsRef.looping;
 	}
 
 	listChords() {
@@ -422,13 +426,11 @@ class ChordBoxPanel extends UIElement {
 		super(name, x, y, 250, h);
 
 		this.generatorSettingsRef = generatorSettingsRef;
-		this.outputWindowRef = outputWindowRef;
 		this.ruleWindowRef = outputWindowRef.ruleWindowRef;
 
 		this.scrollBox = this.addPart(new UIScrollBoxV("Chord Mask", 0, 0, this.w, this.h));
 
 		this.chordBoxes = [];
-		this.looping = true;
 
 		var addButton = new UIButtonWToolTip("Add Chord", 0, 0, 10, 10);
 		this.addPart(addButton);
@@ -444,29 +446,29 @@ class ChordBoxPanel extends UIElement {
 			this.parent.removeChord();
 		}
 
-		var ppButton = new UIButtonWToolTip("Process Progression", 20, 0, 10, 10);
-		this.addPart(ppButton);
-		ppButton.toolTip = "Process Progression";
-		ppButton.ruleWindowRef = this.ruleWindowRef;
-		ppButton.outputWindowRef = this.outputWindowRef;
-		ppButton.onClick = function() {
-			var rules = this.parent.getRules();
-			this.ruleWindowRef.setRules(rules);
-			this.outputWindowRef.looping = this.parent.looping;
-			this.generatorSettingsRef.looping = this.parent.looping;
-		}
+		// var ppButton = new UIButtonWToolTip("Process Progression", 20, 0, 10, 10);
+		// this.addPart(ppButton);
+		// ppButton.toolTip = "Process Progression";
+		// ppButton.ruleWindowRef = this.ruleWindowRef;
+		// ppButton.outputWindowRef = this.outputWindowRef;
+		// ppButton.onClick = function() {
+		// 	var rules = this.parent.getRules();
+		// 	this.ruleWindowRef.setRules(rules);
+		// 	this.generatorSettingsRef.looping = this.parent.looping;
+		// }
 
-		var lpButton = new UIToggleWToolTip("Loop Toggle", 30, 0, 10, 10, this.looping);
-		this.addPart(lpButton);
-		lpButton.toolTip = "Loop?";
-		lpButton.onClick = function() {
-			this.parent.looping = this.toggle;
-			this.generatorSettingsRef.looping = this.parent.looping;
+		this.lpButton = new UIToggleWToolTip("Loop Toggle", 30, 0, 10, 10, this.generatorSettingsRef.looping);
+		this.addPart(this.lpButton);
+		this.lpButton.toolTip = "Loop?";
+		this.lpButton.generatorSettingsRef = this.generatorSettingsRef;
+		this.lpButton.onClick = function() {
+			this.generatorSettingsRef.looping = this.toggle;
 		}
 	}
 
 	onUpdate() {
 		this.scrollBox.setLeastActive();
+		this.lpButton.toggle = this.generatorSettingsRef.looping;
 	}
 
 	addChord(chord = null) {
@@ -551,13 +553,12 @@ class ChordBoxPanel extends UIElement {
 			var chord2 = this.chordBoxes[i].getChord();
 			rules.push(this.interpolateRule(chord1, chord2));
 		}
-		if (this.looping) {
+		if (this.generatorSettingsRef.looping) {
 			var chord1 = this.chordBoxes[this.chordBoxes.length-1].getChord();
 			var chord2 = this.chordBoxes[0].getChord();
 			rules.push(this.interpolateRule(chord1, chord2));
 		}
 
-		outputWindow.looping = this.looping;
 		return rules;
 	}
 

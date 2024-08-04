@@ -745,7 +745,6 @@ class UIToggle extends UIButton {
 		super.onLeftMouseClick();
 	}
 
-	onClick() {}
 	onTrue() {}
 	onFalse() {}
 }
