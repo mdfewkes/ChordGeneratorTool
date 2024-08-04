@@ -7,8 +7,14 @@ var mouseIsDown = false;
 var mouseJustPressed = false;
 var mouseJustReleased = false;
 
-var generator = new ChordGenerator();
-var musicEngine = new musicEngine2();
+var generatorSettings = {
+	chroma: "101011010101",
+	firstChord: new Chord(),
+	lastChord: 0,
+	looping: true,
+	generator: new ChordGenerator(),
+	musicEngine: new musicEngine2(),
+}
 
 var ruleWindow = null;
 var outputWindow = null;
@@ -56,10 +62,10 @@ window.onload = function() {
 
 	mainInterface = new UIMainInterface("ChordTool", canvas.width, canvas.height);
 
-	ruleWindow = mainInterface.addPart(new RuleBoxPanel("The Box O Rules", 200, 10, 355, 580, generator), true);
-	outputWindow = mainInterface.addPart(new OutputPanel("Output Box", 390, 10, 400, 580, ruleWindow, musicEngine), true);
-	chordmapWindow = mainInterface.addPart(new ChordBoxPanel("Chord Display Box", 10, 10, 250, 580, outputWindow), true);
-	keyscaleWindow = mainInterface.addPart(new KeyScalePanel("KeyScale", 10, 10, 400, 580, outputWindow), false);
+	ruleWindow = mainInterface.addPart(new RuleBoxPanel("The Box O Rules", 200, 10, 355, 580, generatorSettings), true);
+	outputWindow = mainInterface.addPart(new OutputPanel("Output Box", 390, 10, 400, 580, ruleWindow, generatorSettings), true);
+	chordmapWindow = mainInterface.addPart(new ChordBoxPanel("Chord Display Box", 10, 10, 250, 580, generatorSettings, outputWindow), true);
+	keyscaleWindow = mainInterface.addPart(new KeyScalePanel("KeyScale", 10, 10, 400, 580, generatorSettings), false);
 
 	chordmapWindow.setChords([new Chord(0,0),new Chord(7,0),new Chord(9,1),new Chord(5,0)]);
 	ruleWindow.setRules(chordmapWindow.getRules());
@@ -84,12 +90,14 @@ function nextFrame() {
 	colorRect(0, 0, canvas.width, canvas.height, 'lightcyan');
 	mainInterface.update();
 	mainInterface.draw();
-	musicEngine.update();
+	generatorSettings.musicEngine.update();
 	mouseJustPressed = false;
 	mouseJustReleased = false;
 
 	window.requestAnimationFrame(nextFrame);
 }
+
+
 
 
 
@@ -148,10 +156,10 @@ class RuleBox extends UIElement {
 }
 
 class RuleBoxPanel extends UIElement {
-	constructor(name, x, y, w, h, generatorRef) {
+	constructor(name, x, y, w, h, generatorSettingsRef) {
 		super(name, x, y, 355, h);
 
-		this.generatorRef = generatorRef;
+		this.generatorRef = generatorSettingsRef.generator;
 
 		this.scrollBox = this.addPart(new UIScrollBoxV("Rule Mask", 0, 0, this.w, this.h));
 
@@ -284,14 +292,13 @@ class ChordDisplay extends UIElement {
 }
 
 class OutputPanel extends UIElement {
-	constructor(name, x, y, w, h, ruleWindowRef, musicEngineRef) {
+	constructor(name, x, y, w, h, ruleWindowRef, generatorSettingsRef) {
 		super(name, x, y, w, h);
 
 		this.ruleWindowRef = ruleWindowRef;
-		this.generatorRef = ruleWindowRef.generatorRef;
-		this.musicEngineRef = musicEngineRef;
-		this.firstChord = new Chord();;
-		this.lastChord = 0;
+		this.generatorSettingsRef = generatorSettingsRef;
+		this.generatorRef = generatorSettingsRef.generator;
+		this.musicEngineRef = generatorSettingsRef.musicEngine;
 
 		this.chords = [];
 		this.spacing = 40;
@@ -339,7 +346,7 @@ class OutputPanel extends UIElement {
 	listChords() {
 		this.parts.length = 0;
 		this.active.length = 0;
-		this.chords = this.generatorRef.generateProgressionOfLength(8, this.looping, this.firstChord, this.lastChord);
+		this.chords = this.generatorRef.generateProgressionOfLength(8, this.generatorSettingsRef.looping, this.generatorSettingsRef.firstChord, this.generatorSettingsRef.lastChord);
 
 		for (var i = 0; i < this.chords.length; i++) {
 			var x = 6 + (i%4) * 96; //20
@@ -411,9 +418,10 @@ class ChordBox extends UIElement {
 }
 
 class ChordBoxPanel extends UIElement {
-	constructor(name, x, y, w, h, outputWindowRef) {
+	constructor(name, x, y, w, h, generatorSettingsRef, outputWindowRef) {
 		super(name, x, y, 250, h);
 
+		this.generatorSettingsRef = generatorSettingsRef;
 		this.outputWindowRef = outputWindowRef;
 		this.ruleWindowRef = outputWindowRef.ruleWindowRef;
 
@@ -445,6 +453,7 @@ class ChordBoxPanel extends UIElement {
 			var rules = this.parent.getRules();
 			this.ruleWindowRef.setRules(rules);
 			this.outputWindowRef.looping = this.parent.looping;
+			this.generatorSettingsRef.looping = this.parent.looping;
 		}
 
 		var lpButton = new UIToggleWToolTip("Loop Toggle", 30, 0, 10, 10, this.looping);
@@ -452,6 +461,7 @@ class ChordBoxPanel extends UIElement {
 		lpButton.toolTip = "Loop?";
 		lpButton.onClick = function() {
 			this.parent.looping = this.toggle;
+			this.generatorSettingsRef.looping = this.parent.looping;
 		}
 	}
 
@@ -561,11 +571,11 @@ class ChordBoxPanel extends UIElement {
 }
 
 class KeyScalePanel extends UIElement {
-	constructor(name, x, y, w, h, outputWindowRef) {
+	constructor(name, x, y, w, h, generatorSettingsRef) {
 		super(name, x, y, 240, 580);
 
-		this.outputWindowRef = outputWindowRef;
-		this.generatorRef = outputWindowRef.generatorRef;
+		this.generatorSettingsRef = generatorSettingsRef;
+		this.generatorRef = generatorSettingsRef.generator;
 
 		this.interval0Toggle = new UIToggle("interval 0 toggle", 15, 20, 10, 10, true);
 		this.addPart(this.interval0Toggle);
@@ -743,15 +753,15 @@ class KeyScalePanel extends UIElement {
 		this.generatorRef.setChroma(chroma, NoteName[this.rootDropdown.getItem()], this.divergenceDropdown.value);
 
 		if (this.startingChordToggle.toggle) {
-			this.outputWindowRef.firstChord = this.startingChord.getChord();
+			this.generatorSettingsRef.firstChord = this.startingChord.getChord();
 		} else {
-			this.outputWindowRef.firstChord = 0;
+			this.generatorSettingsRef.firstChord = 0;
 		}
 
 		if (this.endingChordToggle.toggle) {
-			this.outputWindowRef.lastChord = this.endingChord.getChord();
+			this.generatorSettingsRef.lastChord = this.endingChord.getChord();
 		} else {
-			this.outputWindowRef.lastChord = 0;
+			this.generatorSettingsRef.lastChord = 0;
 		}
 	}
 }
