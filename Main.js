@@ -8,7 +8,6 @@ var mouseJustPressed = false;
 var mouseJustReleased = false;
 
 var generatorSettings = {
-	chroma: "101011010101",
 	firstChord: new Chord(),
 	lastChord: 0,
 	looping: true,
@@ -17,9 +16,9 @@ var generatorSettings = {
 }
 
 var ruleWindow = null;
-var outputWindow = null;
 var chordmapWindow = null;
 var keyscaleWindow = null;
+var outputWindow = null;
 
 function calculateMousePos(evt) {
 	var rect = canvas.getBoundingClientRect(),
@@ -63,25 +62,25 @@ window.onload = function() {
 	mainInterface = new UIMainInterface("ChordTool", canvas.width, canvas.height);
 
 	ruleWindow = mainInterface.addPart(new RuleBoxPanel("The Box O Rules", 200, 10, 355, 580, generatorSettings), true);
-	outputWindow = mainInterface.addPart(new OutputPanel("Output Box", 390, 10, 400, 580, ruleWindow, generatorSettings), true);
-	chordmapWindow = mainInterface.addPart(new ChordBoxPanel("Chord Display Box", 10, 10, 250, 580, generatorSettings, outputWindow), true);
+	chordmapWindow = mainInterface.addPart(new ChordBoxPanel("Chord Display Box", 10, 10, 250, 580, generatorSettings, ruleWindow), true);
 	keyscaleWindow = mainInterface.addPart(new KeyScalePanel("KeyScale", 10, 10, 400, 580, generatorSettings), false);
+	outputWindow = mainInterface.addPart(new OutputPanel("Output Box", 390, 10, 400, 580, generatorSettings, ruleWindow), true);
 
 	chordmapWindow.setChords([new Chord(0,0),new Chord(7,0),new Chord(9,1),new Chord(5,0)]);
 	ruleWindow.setRules(chordmapWindow.getRules());
 
-	var testPanel = mainInterface.addPart(new UIElement("testpanel", 100, 100, 600, 300), false);
-	testPanel.addPart(new UIButton("testbutton1", 20, 20, 10, 10));
-	testPanel.addPart(new UIToggle("testtoggle1", 40, 20, 10, 10));
-	testPanel.addPart(new ChordDisplay("testchorddisplay", 60, 20, 200, 20));
-	testPanel.addPart(new ChordBox("testchordbox", 20, 60, 20, 20));
-	testPanel.addPart(new RuleBox("testruledisplay", 260, 60, 200, 20));
-	testPanel.addPart(new UIMoveBar("testmovebar", 0, 0, 600, 10));
-	testPanel.addPart(new UICloseButton("testclose", 590, 0, 10, 10));
-	var scrolltest = testPanel.addPart(new UIScrollBoxHV("testscrollbox", 100, 130, 150, 150));
-	scrolltest.addPart(new RuleBox("filltest", 0, 0, 0, 0));
-	scrolltest.addPart(new RuleBox("filltest", 0, 70, 0, 0));
-	scrolltest.addPart(new RuleBox("filltest", 0, 140, 0, 0));
+	// var testPanel = mainInterface.addPart(new UIElement("testpanel", 100, 100, 600, 300), false);
+	// testPanel.addPart(new UIButton("testbutton1", 20, 20, 10, 10));
+	// testPanel.addPart(new UIToggle("testtoggle1", 40, 20, 10, 10));
+	// testPanel.addPart(new ChordDisplay("testchorddisplay", 60, 20, 200, 20));
+	// testPanel.addPart(new ChordBox("testchordbox", 20, 60, 20, 20));
+	// testPanel.addPart(new RuleBox("testruledisplay", 260, 60, 200, 20));
+	// testPanel.addPart(new UIMoveBar("testmovebar", 0, 0, 600, 10));
+	// testPanel.addPart(new UICloseButton("testclose", 590, 0, 10, 10));
+	// var scrolltest = testPanel.addPart(new UIScrollBoxHV("testscrollbox", 100, 130, 150, 150));
+	// scrolltest.addPart(new RuleBox("filltest", 0, 0, 0, 0));
+	// scrolltest.addPart(new RuleBox("filltest", 0, 70, 0, 0));
+	// scrolltest.addPart(new RuleBox("filltest", 0, 140, 0, 0));
 
 	nextFrame();
 }
@@ -292,13 +291,12 @@ class ChordDisplay extends UIElement {
 }
 
 class OutputPanel extends UIElement {
-	constructor(name, x, y, w, h, ruleWindowRef, generatorSettingsRef) {
+	constructor(name, x, y, w, h, generatorSettingsRef, ruleWindowRef) {
 		super(name, x, y, w, h);
 
-		this.ruleWindowRef = ruleWindowRef;
 		this.generatorSettingsRef = generatorSettingsRef;
 		this.generatorRef = generatorSettingsRef.generator;
-		this.musicEngineRef = generatorSettingsRef.musicEngine;
+		this.ruleWindowRef = ruleWindowRef;
 
 		this.chords = [];
 		this.spacing = 40;
@@ -315,7 +313,7 @@ class OutputPanel extends UIElement {
 		this.genButton.label.label = "Generate";
 
 		this.playbackButton = new UIButton("Playback", this.w/2-100, this.h-46, 95, 30);
-		this.playbackButton.musicEngineRef = this.musicEngineRef;
+		this.playbackButton.musicEngineRef = this.generatorSettingsRef.musicEngine;
 		this.playbackButton.onClick = function() {
 			this.musicEngineRef.playProgression(this.parent.chords);
 		}
@@ -324,7 +322,7 @@ class OutputPanel extends UIElement {
 		this.playbackButton.label.label = "Play";
 
 		this.stopPlaybackButton = new UIButton("Stop Playback", this.w/2+5, this.h-46, 95, 30);
-		this.stopPlaybackButton.musicEngineRef = this.musicEngineRef;
+		this.stopPlaybackButton.musicEngineRef = this.generatorSettingsRef.musicEngine;
 		this.stopPlaybackButton.onClick = function() {
 			this.musicEngineRef.stopPlayback();
 		}
@@ -422,11 +420,11 @@ class ChordBox extends UIElement {
 }
 
 class ChordBoxPanel extends UIElement {
-	constructor(name, x, y, w, h, generatorSettingsRef, outputWindowRef) {
+	constructor(name, x, y, w, h, generatorSettingsRef, ruleWindowRef) {
 		super(name, x, y, 250, h);
 
 		this.generatorSettingsRef = generatorSettingsRef;
-		this.ruleWindowRef = outputWindowRef.ruleWindowRef;
+		this.ruleWindowRef = ruleWindowRef;
 
 		this.scrollBox = this.addPart(new UIScrollBoxV("Chord Mask", 0, 0, this.w, this.h));
 
@@ -446,16 +444,14 @@ class ChordBoxPanel extends UIElement {
 			this.parent.removeChord();
 		}
 
-		// var ppButton = new UIButtonWToolTip("Process Progression", 20, 0, 10, 10);
-		// this.addPart(ppButton);
-		// ppButton.toolTip = "Process Progression";
-		// ppButton.ruleWindowRef = this.ruleWindowRef;
-		// ppButton.outputWindowRef = this.outputWindowRef;
-		// ppButton.onClick = function() {
-		// 	var rules = this.parent.getRules();
-		// 	this.ruleWindowRef.setRules(rules);
-		// 	this.generatorSettingsRef.looping = this.parent.looping;
-		// }
+		var ppButton = new UIButtonWToolTip("Process Progression", 20, 0, 10, 10);
+		this.addPart(ppButton);
+		ppButton.toolTip = "Process Progression";
+		ppButton.ruleWindowRef = this.ruleWindowRef;
+		ppButton.onClick = function() {
+			var rules = this.parent.getRules();
+			this.ruleWindowRef.setRules(rules);
+		}
 
 		this.lpButton = new UIToggleWToolTip("Loop Toggle", 30, 0, 10, 10, this.generatorSettingsRef.looping);
 		this.addPart(this.lpButton);
